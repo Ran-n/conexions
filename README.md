@@ -5,12 +5,10 @@
 + [Resumo](README.md#resumo)
 
 ## Resumo
-
 Módulo de conexións que scrapea e usa os proxies da páxina de "sslproxies.org"
 
 
 ## Doazóns
-
 🙇🙇‍♀
 
 | Moeda | Dirección |
