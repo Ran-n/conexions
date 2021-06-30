@@ -1,5 +1,4 @@
 # Conexións
-
 ## Índice:
 * [Doazóns](README.md#doazóns)
 + [Resumo](README.md#resumo)
