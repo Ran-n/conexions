@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------------------------
 #+ Autor:	Ran#
 #+ Creado:	19/05/2021 13:44:12
-#+ Editado:	30/06/2021 13:52:31
+#+ Editado:	30/06/2021 17:37:24
 #------------------------------------------------------------------------------------------------
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
@@ -181,7 +181,7 @@ class porProxie:
     
 
     # get usando proxies
-    def get(self, url, params=None, stream=False, timeout=30):
+    def get(self, url, bolacha=None, params=None, stream=False, timeout=30):
         # de usar o proxie o max de veces coller un novo
         if self.getNumConexions() >= self.getMaxConexions():
             try:
@@ -192,7 +192,9 @@ class porProxie:
                 if self.__verbose: print('* ERRO: función "get" do obxecto "porProxie" do ficheiro "conexions" *')
 
         try:
-            resposta = requests.get(url=url, params=params, proxies=self.getProxie(), stream=stream, timeout=timeout).text
+            resposta = requests.get(url=url, params=params, proxies=self.getProxie(),
+                    headers=self.getCabeceiraAleatoria(), cookies=bolacha,
+                    stream=stream, timeout=timeout).text
             self.__setConexions()
         except:
             if self.__verbose: print('* Erro do proxie "{}" *\n'.format(self.getProxie()['https']))
