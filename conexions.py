@@ -204,8 +204,8 @@ class porProxie:
         return resposta
     
     # get sen o uso de proxies
-    def getEspido(self, url, params=None, stream=False, timeout=30):
-        return requests.get(url=url, params=params, stream=stream, timeout=timeout).text
+    def getEspido(self, url, bolacha=None, cabeceira=None, params=None, stream=False, timeout=30):
+        return requests.get(url=url, headers=cabeceira, cookies=bolacha, params=params, stream=stream, timeout=timeout).text
 
 #------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
