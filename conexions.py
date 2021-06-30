@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------------------------
 #+ Autor:	Ran#
 #+ Creado:	19/05/2021 13:44:12
-#+ Editado:	30/06/2021 13:47:53
+#+ Editado:	30/06/2021 13:52:31
 #------------------------------------------------------------------------------------------------
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
@@ -128,8 +128,12 @@ class porProxie:
 
     # establece o valor de verbose. True mostrar prints False non mostralos
     def setVerbose(self, novoVerbose):
+        # está ben así porque se non me mandan o novoVerbose saca TypeError de que lle falta unha variable
+        # se o que mandan non é booleano levantar excepción
+        if type(novoVerbose) != bool: raise Exception('A variable debe ser te tipo booleano')
+
         try:
-            self.__verbose = bool(novoVerbose)
+            self.__verbose = novoVerbose
         except:
             # con isto soamente sacame o erro orixinal
             raise
