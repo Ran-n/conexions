@@ -9,7 +9,6 @@ Módulo de conexións que scrapea e usa os proxies da páxina de "sslproxies.org
 
 ## Doazóns
 🙇🙇‍♀
-
 | Moeda     | Dirección                                                                                         |
 | :---:     | :---                                                                                              |
 | Bitcoin   | bc1q79vja8jzr27dxaf3ylu7e49ady8zq0jsm5qfk6                                                        |
