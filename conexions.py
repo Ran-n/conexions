@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------------------------
 #+ Autor:	Ran#
 #+ Creado:	19/05/2021 13:44:12
-#+ Editado:	30/06/2021 00:25:41
+#+ Editado:	30/06/2021 13:47:53
 #------------------------------------------------------------------------------------------------
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
@@ -49,6 +49,9 @@ class porProxie:
 
     # Devolve un proxie da lista de forma aleatoria
     def __getProxieAleatorio(self, eliminar=True):
+        # se o que mandan non é booleano levantar excepción
+        if type(eliminar) != bool: raise Exception('A variable debe ser te tipo booleano')
+
         cant_proxies = len(self.__proxie_list)
         # se non ten proxies colle a lista de novo
         while cant_proxies == 0:
@@ -96,6 +99,8 @@ class porProxie:
 
     # set de conexions. Ou engade 1 ou resetea a 0
     def __setConexions(self, resetear=False):
+        # mira se o metido é booleano, se non manda excepción
+        if type(resetear) != bool: raise Exception('A variable debe ser te tipo booleano')
         try:
             # este if da erro non sei por que
             #self.__conexions = 0 if resetear else self.__conexions += 1
@@ -113,11 +118,22 @@ class porProxie:
     # establece o máximo de conexións por proxie
     def setMaxConexions(self, novoMaxConexions):
         try:
-            self.__maxConexions = novoMaxConexions
+            self.__maxConexions = int(novoMaxConexions)
         except:
             # con isto soamente sacame o erro orixinal
             raise
             if self.__verbose: print('* ERRO: función "setMaxConexions" do obxecto "porProxie" do ficheiro "conexions" *')
+        finally:
+            return True
+
+    # establece o valor de verbose. True mostrar prints False non mostralos
+    def setVerbose(self, novoVerbose):
+        try:
+            self.__verbose = bool(novoVerbose)
+        except:
+            # con isto soamente sacame o erro orixinal
+            raise
+            if self.__verbose: print('* ERRO: función "setVerbose" do obxecto "porProxie" do ficheiro "conexions" *')
         finally:
             return True
 
