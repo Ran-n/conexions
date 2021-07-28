@@ -1,3 +1,22 @@
+Metadata-Version: 2.1
+Name: conexions
+Version: 0.1.1
+Summary: Módulo para disttintos tipos de conexión en python como proxies ou tor
+Home-page: https://github.com/ran-n/conexions
+Author: Ran#
+Author-email: ran-n@tutanota.com
+License: UNKNOWN
+Project-URL: Bug Tracker, https://github.com/ran-n/conexions/issues
+Platform: UNKNOWN
+Classifier: Development Status :: 1 - Planning
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3.8
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
 # Conexións
 [![GitHub license](https://img.shields.io/github/license/Ran-n/scripts)](https://github.com/Ran-n/scripts/blob/master/LICENSE)
 ![PowerShell Gallery](https://img.shields.io/badge/plataforma-LiGNUx%20%7C%20Windows10-lightgrey)
@@ -28,3 +47,5 @@ Monero
 
 Wownero
 WW2RheTNrq8goAi42Dz5AKUj1qLSaTSSgiH7sHR2qRqojg238EXP3MM3xuUgswriET7UrpkEoYaCkecBhnU49oxM1dZyYoSmm
+
+

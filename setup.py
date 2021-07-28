@@ -1,32 +1,28 @@
-#! /usr/bin/python3
-# -*- coding: utf-8 -*-
-# -------------------------------------------------------------------------------------------------------------
-#+ Autor:	Ran#
-#+ Creado:	06/07/2021 15:11:00
-#+ Editado:	06/07/2021 16:58:51
-# -------------------------------------------------------------------------------------------------------------
+import setuptools
 
-from setuptools import setup
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
-setup(
-        name='conexions',
-        version='1.1',
-        description='Módulo para conexións en python3',
-        url='https://github.com/Ran-n/conexions',
-        author='Ran#',
-        author_email='ran-n@tutanota.com',
-        license='GPL-3.0',
-        packages=['conexions'],
-        install_requires=[
-           ],
-
-        classifiers=[
-            'Development Status :: Rolling Release',
-            'Intended Audience :: General Public',
-            'License :: GPL-3.0',
-            'Operating System :: Lignux & Windows',
-            'Programming Language :: Python :: 3.8.5',
-            ],
-        )
-
-# -------------------------------------------------------------------------------------------------------------
+setuptools.setup(
+    name="conexions",
+    version="0.1.1",
+    author="Ran#",
+    author_email="ran-n@tutanota.com",
+    description="Módulo para disttintos tipos de conexión en python como proxies ou tor",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/ran-n/conexions",
+    project_urls={
+        "Bug Tracker": "https://github.com/ran-n/conexions/issues",
+    },
+    classifiers=[
+        "Development Status :: 1 - Planning",
+        "Intended Audience :: Developers",
+        "Programming Language :: Python :: 3.8",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Operating System :: OS Independent",
+    ],
+    package_dir={"": "src"},
+    packages=setuptools.find_packages(where="src"),
+    python_requires=">=3.8",
+)
