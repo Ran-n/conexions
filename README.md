@@ -20,7 +20,7 @@ Por defecto non ten verbose, ten un máximo de 10 conexións por ip e 30 segundo
 ## Doazóns
 🙇🙇‍♀
 
-Bitcoin
+Bitcoin  
 bc1q79vja8jzr27dxaf3ylu7e49ady8zq0jsm5qfk6 
 
 Monero
