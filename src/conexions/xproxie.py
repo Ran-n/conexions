@@ -197,8 +197,10 @@ class porProxie:
 
         # uso de bs4 para sacar a táboa
         soup = BeautifulSoup(paxina_proxies, 'html.parser')
-        taboa_proxies = soup.find(id='proxylisttable')
-
+        #taboa_proxies = soup.find(id='proxylisttable')  #Vello nome
+        #taboa_proxies = soup.find(class_='table table-striped table-bordered')  #Nova opción con class
+        taboa_proxies = soup.find(id='list')  #Nova opción con id
+        
         # ir buscando na táboa as columnas e gardalas na lista de dicionarios
         temp_proxies = []
         for fila in taboa_proxies.tbody.find_all('tr'):
