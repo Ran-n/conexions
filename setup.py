@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="conexions",
-    version="0.1.1",
+    version="0.1.2",
     author="Ran#",
     author_email="ran-n@tutanota.com",
     description="Módulo para disttintos tipos de conexión en python como proxies ou tor",
