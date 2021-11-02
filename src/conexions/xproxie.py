@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------------------------
 #+ Autor:	Ran#
 #+ Creado:	19/05/2021 13:44:12
-#+ Editado:	30/06/2021 23:23:13
+#+ Editado:	2021/10/25 17:33:43.946807
 #------------------------------------------------------------------------------------------------
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
@@ -47,7 +47,7 @@ class porProxie:
         if eliminar: del(self.__proxie_list[indice])
 
         Tproxie = Tproxie['ip']+':'+Tproxie['porto']
-        return {'https': Tproxie, 'http': Tproxie}
+        return {'http': 'http://'+Tproxie, 'https': 'https://'+Tproxie}
 
     # devolve o valor de verbose
     def __getVerbose(self):
@@ -64,11 +64,11 @@ class porProxie:
     # devolve a lista de proxies
     def getProxies(self):
         return self.__proxie_list
-    
+
     # devolve o proxie usado actualmente
     def getProxie(self):
         return self.__proxie
-    
+
     # devolve cantas conexións se levan feito
     def getNumConexions(self):
         return self.__conexions
@@ -82,7 +82,7 @@ class porProxie:
         return self.__maxConexions
 
     ## GETTERS ##
-        
+
     ## SETTERS ##
     # set de conexions. Ou engade 1 ou resetea a 0
     def __setConexions(self, resetear=False):
@@ -137,7 +137,7 @@ class porProxie:
             self.__proxie_list_gardada = self.__proxie_list.copy()
         except:
             # con isto soamente sacame o erro orixinal
-            raise 
+            raise
             if self.__getVerbose(): print('* ERRO: función "setProxieList" do obxecto "porProxie" do ficheiro "conexions.py" *')
             return False
         finally:
@@ -188,7 +188,7 @@ class porProxie:
     # saca a lista de proxies da páxina web sslproxies.org
     def __getProxies(self):
         # request á páxina
-        paxina_proxies = requests.get(url=self.__ligazon_sslproxies, headers=self.getCabeceiraAleatoria()) 
+        paxina_proxies = requests.get(url=self.__ligazon_sslproxies, headers=self.getCabeceiraAleatoria())
 
         # bloque para sacar o texto en utf-8
         if paxina_proxies.encoding.lower() != 'utf-8':
@@ -200,7 +200,7 @@ class porProxie:
         #taboa_proxies = soup.find(id='proxylisttable')  #Vello nome
         #taboa_proxies = soup.find(class_='table table-striped table-bordered')  #Nova opción con class
         taboa_proxies = soup.find(id='list')  #Nova opción con id
-        
+
         # ir buscando na táboa as columnas e gardalas na lista de dicionarios
         temp_proxies = []
         for fila in taboa_proxies.tbody.find_all('tr'):
@@ -222,7 +222,7 @@ class porProxie:
 
         if self.__getVerbose(): print('* Lista de táboas de sslproxies.org scrapeada *\n')
         return temp_proxies
-    
+
 
     # forma de crear unha session como en requests
     def sesion(self):
@@ -282,7 +282,7 @@ class porProxie:
             self.setNovoProxie()
             resposta = self.get(url=url, bolacha=bolacha, params=params, stream=stream, timeout=timeout)
         return resposta
-    
+
     # get sen o uso de proxies
     def getEspido(self, url, params=None, bolacha=None, cabeceira=None, stream=False, timeout=30):
         try:
