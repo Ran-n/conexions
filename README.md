@@ -8,7 +8,6 @@
 
 [Ran-n/conexions](https://github.com/Ran-n/conexions)
 
-## Resumo
 Módulo de conexións que scrapea e usa os proxies da páxina de "sslproxies.org".
 Por defecto non ten verbose, ten un máximo de 10 conexións por ip e 30 segundos de espera por get.
 
