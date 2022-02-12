@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------------------------
 #+ Autor:	Ran#
 #+ Creado:	19/05/2021 13:44:12
-#+ Editado:	2021/10/25 17:33:43.946807
+#+ Editado:	2022/02/12 14:05:38.177828
 #------------------------------------------------------------------------------------------------
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
@@ -13,19 +13,20 @@ import json
 import secrets
 from stem import Signal
 from stem.control import Controller
+from halo import Halo
 #------------------------------------------------------------------------------------------------
 class porProxie:
     # constructor
     def __init__(self, verbose=False, maxCons=10):
-        self.__verbose = verbose # variable que di se queres prints
+        self.__verbose = verbose                                    # variable que di se queres prints
         self.__ligazon_sslproxies = 'https://www.sslproxies.org'
-        self.__sesion = None # se se crea unha session de requests
-        self.__proxie_list = self.__getProxies() # Lista con todolos proxies
+        self.__sesion = None                                        # se se crea unha session de requests
+        self.__proxie_list = self.__getProxies()                    # Lista con todolos proxies
         self.__proxie_list_gardada = self.__proxie_list.copy()
-        self.__proxie = self.__getProxieAleatorio() # Colle un proxie
-        self.__conexions = 0 # Número de conexións feitas cun proxie
-        self.__conexionsEspido = 0 # Número de conexións feitas sen proxie
-        self.__maxConexions = 10 # Número máximo de conexións cun proxie
+        self.__proxie = self.__getProxieAleatorio()                 # Colle un proxie
+        self.__conexions = 0                                        # Número de conexións feitas cun proxie
+        self.__conexionsEspido = 0                                  # Número de conexións feitas sen proxie
+        self.__maxConexions = 10                                    # Número máximo de conexións cun proxie
 
     ## GETTERS ##
     # Devolve un proxie da lista de forma aleatoria
@@ -47,7 +48,7 @@ class porProxie:
         if eliminar: del(self.__proxie_list[indice])
 
         Tproxie = Tproxie['ip']+':'+Tproxie['porto']
-        return {'http': 'http://'+Tproxie, 'https': 'https://'+Tproxie}
+        return {'http': 'http://'+Tproxie, 'https': 'http://'+Tproxie}
 
     # devolve o valor de verbose
     def __getVerbose(self):
@@ -223,7 +224,6 @@ class porProxie:
         if self.__getVerbose(): print('* Lista de táboas de sslproxies.org scrapeada *\n')
         return temp_proxies
 
-
     # forma de crear unha session como en requests
     def sesion(self):
         try:
@@ -251,8 +251,8 @@ class porProxie:
             if self.__getVerbose(): print('* Rematando a sesión *')
             return True
 
-
     # get usando proxies
+    @Halo(text='Conectando', spinner='dots')
     def get(self, url, params=None, bolacha=None, stream=False, timeout=30):
         # de usar o proxie o max de veces coller un novo
         if self.getNumConexions() >= self.getMaxConexions():
@@ -270,11 +270,11 @@ class porProxie:
             if (self.getSesion()):
                 resposta = self.getSesion().get(url=url, params=params, proxies=self.getProxie(),
                                                 headers=self.getCabeceiraAleatoria(), cookies=bolacha,
-                                                stream=stream, timeout=timeout).text
+                                                stream=stream, timeout=timeout)
             else:
                 resposta = requests.get(url=url, params=params, proxies=self.getProxie(),
                                         headers=self.getCabeceiraAleatoria(), cookies=bolacha,
-                                        stream=stream, timeout=timeout).text
+                                        stream=stream, timeout=timeout)
             self.__setConexions()
         except:
             if self.__getVerbose(): print('* Erro do proxie "{}" *\n'.format(self.getProxie()['https']))
@@ -300,32 +300,36 @@ class porProxie:
             # aumentamos o num de conexs sen proxie
             self.__setConexionsEspido()
 
+
+    def get_ip(self, params=None, bolacha=None, cabeceira=None, stream=False, timeout=30):
+        return self.get('https://icanhazip.com')
+
 #------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
     ligazon_get_ip = 'https://icanhazip.com'
 
     print('> TEST\n')
-    conn = porProxie(True)
+    conn = porProxie(False)
     #print(conn.getCabeceiraAleatoria())
     #print(conn.getProxies())
 
-    print('> IP espida usada {} vez {}\n'.format(conn.getEspido(ligazon_get_ip).rstrip(), conn.getNumConexionsEspido()))
+    print('> IP espida usada {} vez {}\n'.format(conn.getEspido(ligazon_get_ip).text.rstrip(), conn.getNumConexionsEspido()))
 
-    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).rstrip(), conn.getNumConexions()))
-    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).rstrip(), conn.getNumConexions()))
+    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.getNumConexions()))
+    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.getNumConexions()))
 
     print('> Sesión actual = {}'.format(conn.getSesion()))
     print('> Inicio de sesión')
     conn.sesion()
     print('> Sesión actual = {}\n'.format(conn.getSesion()))
-    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).rstrip(), conn.getNumConexions()))
-    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).rstrip(), conn.getNumConexions()))
+    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.getNumConexions()))
+    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.getNumConexions()))
     conn.sesionRematar()
     print('> Fin de sesión')
     print('> Sesión actual = {}\n'.format(conn.getSesion()))
 
-    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).rstrip(), conn.getNumConexions()))
+    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.getNumConexions()))
 
-    print('> IP espida usada {} vez {}\n'.format(conn.getEspido(ligazon_get_ip).rstrip(), conn.getNumConexionsEspido()))
+    print('> IP espida usada {} vez {}\n'.format(conn.getEspido(ligazon_get_ip).text.rstrip(), conn.getNumConexionsEspido()))
 
 #------------------------------------------------------------------------------------------------
