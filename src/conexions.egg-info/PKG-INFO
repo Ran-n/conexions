@@ -1,18 +1,20 @@
 Metadata-Version: 2.1
 Name: conexions
-Version: 0.1.2.1
-Summary: Módulo para distintos tipos de conexión en python como proxies ou tor
+Version: 1.0
+Summary: Módulo para distintos unificado de conexións web
 Home-page: https://www.github.com/Ran-n/conexions
 Author: Ran#
 Author-email: ran-n@tutanota.com
 License: GPLv3
 Project-URL: Bug Tracker, https://www.github.com/Ran-n/conexions/issues
 Platform: UNKNOWN
-Classifier: Development Status :: 1 - Planning
+Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Developers
-Classifier: Programming Language :: Python :: 3.8
 Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
 Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3.8.5
+Classifier: Natural Language :: Galician
+Classifier: Natural Language :: Portuguese
 Requires-Python: >=3.8.5
 Description-Content-Type: text/markdown
 License-File: LICENSE
@@ -27,25 +29,19 @@ License-File: LICENSE
 
 [Ran-n/conexions](https://github.com/Ran-n/conexions)
 
-## Índice:
-* [Doazóns](README.md#doazóns)
-+ [Resumo](README.md#resumo)
-
-## Resumo
 Módulo de conexións que scrapea e usa os proxies da páxina de "sslproxies.org".
 Por defecto non ten verbose, ten un máximo de 10 conexións por ip e 30 segundos de espera por get.
 
 
-## Doazóns
-🙇🙇‍♀
+## [Donations 🙇🙇‍♀](https://github.com/Ran-n/doc/blob/main/doaz%C3%B3ns.md)
 
-Bitcoin  
-bc1q79vja8jzr27dxaf3ylu7e49ady8zq0jsm5qfk6 
+**Bitcoin** <img src="https://raw.githubusercontent.com/Ran-n/svgs/main/divisas/bitcoin/bitcoin_0.svg" width="20" alt="bitcoin logo" title="Bitcoin">  
+bc1q79vja8jzr27dxaf3ylu7e49ady8zq0jsm5qfk6
 
-Monero
+**Monero** <img src="https://raw.githubusercontent.com/Ran-n/svgs/main/divisas/monero/monero_0.svg" width="20" alt="monero logo" title="Monero">  
 88Rezd6ZQzaCb1s7K1tRCiCaDzuHrfYsn4q348jJuePpLs84JNsWEghMAZZgzpDPrqD4PBxk7hwMkSdNQ4CLqFHyPVLdX1D
 
-Wownero
+**Wownero** <img src="https://raw.githubusercontent.com/Ran-n/svgs/main/divisas/wownero/wownero_0.svg" width="20" alt="wownero logo" title="Wownero">  
 WW2RheTNrq8goAi42Dz5AKUj1qLSaTSSgiH7sHR2qRqojg238EXP3MM3xuUgswriET7UrpkEoYaCkecBhnU49oxM1dZyYoSmm
 
 

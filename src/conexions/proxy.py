@@ -3,7 +3,7 @@
 #------------------------------------------------------------------------------------------------
 #+ Autor:	Ran#
 #+ Creado:	19/05/2021 13:44:12
-#+ Editado:	2022/02/12 19:44:05.712905
+#+ Editado:	2022/02/13 11:18:16.603779
 #------------------------------------------------------------------------------------------------
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
@@ -21,7 +21,7 @@ class Proxy:
         self.__verbose = verbose                                    # variable que di se queres prints
         self.__ligazon_sslproxies = 'https://www.sslproxies.org'
         self.__sesion = None                                        # se se crea unha session de requests
-        self.__proxy_list = self.__get_proxies()                    # Lista con todolos proxies
+        self.__proxy_list = self.__get_proxys()                    # Lista con todolos proxies
         self.__proxy_list_gardada = self.__proxy_list.copy()
         self.__proxy = self.__get_proxie_aleatorio()                # Colle un proxie
         self.__conexions = 0                                        # Número de conexións feitas cun proxie
@@ -73,11 +73,11 @@ class Proxy:
         return self.__proxy
 
     # devolve cantas conexións se levan feito
-    def get_num_conexions(self):
+    def get_cant_conexions(self):
         return self.__conexions
 
     # devolve cantas conexións se levan feito espidas
-    def get_num_conexionsEspido(self):
+    def get_cant_conexions_espido(self):
         return self.__conexions_espido
 
     # devolve o máximo de conexións actual
@@ -137,7 +137,7 @@ class Proxy:
     # set automático da lista de proxies
     def set_proxie_list(self):
         try:
-            self.__proxy_list = self.__get_proxies()
+            self.__proxy_list = self.__get_proxys()
             self.__proxy_list_gardada = self.__proxy_list.copy()
         except:
             # con isto soamente sacame o erro orixinal
@@ -191,20 +191,20 @@ class Proxy:
     ## SETTERS ##
 
     # saca a lista de proxies da páxina web sslproxies.org
-    def __get_proxies(self):
+    def __get_proxys(self):
         # request á páxina
         paxina_proxies = requests.get(url=self.__ligazon_sslproxies, headers=self.get_cabeceira_aleatoria())
 
         # bloque para sacar o texto en utf-8
         if paxina_proxies.encoding.lower() != 'utf-8':
             paxina_proxies.encoding = 'utf-8'
-        paxina_proxies = paxina_proxies.text
 
         # uso de bs4 para sacar a táboa
-        soup = BeautifulSoup(paxina_proxies, 'html.parser')
+        soup = BeautifulSoup(paxina_proxies.text, 'html.parser')
         #taboa_proxies = soup.find(id='proxylisttable')  #Vello nome
         #taboa_proxies = soup.find(class_='table table-striped table-bordered')  #Nova opción con class
-        taboa_proxies = soup.find(id='list')  #Nova opción con id
+        #taboa_proxies = soup.find(id='list')  #Nova opción con id
+        taboa_proxies = soup.find(class_='fpl-list')  #Nova opción con id
 
         # ir buscando na táboa as columnas e gardalas na lista de dicionarios
         temp_proxies = []
@@ -259,7 +259,7 @@ class Proxy:
     @Halo(text='Conectando', spinner='dots')
     def get(self, url, params=None, bolacha=None, stream=False, timeout=30):
         # de usar o proxie o max de veces coller un novo
-        if self.get_num_conexions() >= self.get_max_conexions():
+        if self.get_cant_conexions() >= self.get_max_conexions():
             try:
                 self.set_novo_proxy()
             except:
@@ -322,23 +322,22 @@ if __name__ == '__main__':
     #print(conn.get_cabeceira_aleatoria())
     #print(conn.get_proxies())
 
-    print('> IP espida usada {} vez {}\n'.format(conn.get_espido(ligazon_get_ip).text.rstrip(), conn.get_num_conexionsEspido()))
+    print('> IP espida usada {} vez {}\n'.format(conn.get_espido(ligazon_get_ip).text.rstrip(), conn.get_cant_conexions_espido()))
 
-    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.get_num_conexions()))
-    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.get_num_conexions()))
+    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.get_cant_conexions()))
+    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.get_cant_conexions()))
 
     print('> Sesión actual = {}'.format(conn.get_sesion()))
     print('> Inicio de sesión')
     conn.sesion()
     print('> Sesión actual = {}\n'.format(conn.get_sesion()))
-    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.get_num_conexions()))
-    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.get_num_conexions()))
+    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.get_cant_conexions()))
+    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.get_cant_conexions()))
     conn.sesion_fin()
     print('> Fin de sesión')
     print('> Sesión actual = {}\n'.format(conn.get_sesion()))
 
-    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.get_num_conexions()))
+    print('> IP proxie usada {} vez {}\n'.format(conn.get(ligazon_get_ip).text.rstrip(), conn.get_cant_conexions()))
 
-    print('> IP espida usada {} vez {}\n'.format(conn.get_espido(ligazon_get_ip).text.rstrip(), conn.get_num_conexionsEspido()))
-
+    print('> IP espida usada {} vez {}\n'.format(conn.get_espido(ligazon_get_ip).text.rstrip(), conn.get_cant_conexions_espido()))
 #------------------------------------------------------------------------------------------------
