@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/12 19:50:16.098183
-#+ Editado:	2022/02/15 22:26:22.751966
+#+ Editado:	2022/02/13 14:50:31.057445
 # ------------------------------------------------------------------------------
 import unittest
 import requests
@@ -15,7 +15,6 @@ class TestProxy(unittest.TestCase):
     lig: str = 'https://icanhazip.com'
     ip_clara: str = requests.get(lig).text.rstrip()
 
-    """
     def test_get_espido(self):
         r = Proxy(verbose=False)
 
@@ -95,29 +94,5 @@ class TestProxy(unittest.TestCase):
 
         r.sesion_fin()
         self.assertIsNone(r.get_sesion())
-    """
-
-    def test_get_proxy(self) -> None:
-        """
-        """
-
-        p = Proxy()
-
-        self.assertEqual(p.get_cant_cons(), 0)
-        self.assertEqual(p.get_proxy(), p.get_proxy())
-        self.assertEqual(p.get_cant_cons(), 2)
-
-        p.set_max_cons(2)
-        self.assertEqual(p.get_cant_cons(), 2)
-        self.assertEqual(p.get_proxy(), p.get_proxy())
-        self.assertEqual(p.get_cant_cons(), 2)
-
-        p.set_max_cons(1)
-        self.assertNotEqual(p.get_proxy(), p.get_proxy())
-        self.assertNotEqual(p.get_proxy(), p.get_proxy())
-        self.assertEqual(p.get_cant_cons(), 1)
-
-
-
 
 # ------------------------------------------------------------------------------

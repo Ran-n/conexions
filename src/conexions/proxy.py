@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/15 21:07:29.323023
+#+ Editado:	2022/02/15 22:26:41.269012
 # ------------------------------------------------------------------------------
 import requests
 from requests.models import Response
@@ -12,10 +12,8 @@ from typing import List, Union
 from bs4 import BeautifulSoup as bs
 from fake_useragent import UserAgent
 
-#from .dto_proxy import ProxyDTO
-from dto_proxy import ProxyDTO
-#from .excepcions import CambioNaPaxinaErro
-from excepcions import CambioNaPaxinaErro
+from .dto_proxy import ProxyDTO
+from .excepcions import CambioNaPaxinaErro
 # ------------------------------------------------------------------------------
 class Proxy:
     __ligazon: str = 'https://sslproxies.org'
@@ -73,8 +71,14 @@ class Proxy:
     def get_proxys(self) -> List[ProxyDTO]:
         return self.__lst_proxys
 
-    def get_proxy(self) -> ProxyDTO:
-        return self.__proxy
+    def get_proxy(self) -> dict[str, str]:
+        try:
+            # se se alcanzou o máximo sacar novo proxy
+            if (self.get_max_cons() != 0) and (self.get_cant_cons() >= self.get_max_cons()):
+                self.set_proxy()
+            return self.__proxy.format()
+        finally:
+            self.__set_cant_cons(self.get_cant_cons()+1)
 
     def get_ligazons_ip(self) -> List[str]:
         return self.__ligazons_ip
@@ -178,27 +182,18 @@ class Proxy:
 
     # Setters #
 
-    def aumentar_cant_cons(self) -> None:
-        self.__set_cant_cons(self.get_cant_cons()+1)
-
-    def aumentar_cant_cons_espido(self) -> None:
-        self.__set_cant_cons_espido(self.get_cant_cons_espido()+1)
-
     def get(self, ligazon: str, params: dict = None, bolachas: dict = None,
-            stream: dict = False, timeout: int = 0) -> Response:
+            stream: dict = False, timeout: int = None) -> Response:
 
         # lazy_check_types
 
         #self.
 
-        if timeout != self.get_timeout():
+        if not timeout:
             timeout = self.get_timeout()
 
         return requests.get(url= ligazon, params= params, proxies= self.get_proxy(),
                 headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
                 stream= stream, timeout= timeout)
 
-# ------------------------------------------------------------------------------
-if __name__ == '__main__':
-    p = Proxy()
 # ------------------------------------------------------------------------------

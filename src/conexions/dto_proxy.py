@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 15:30:39.408208
-#+ Editado:	2022/02/15 20:58:41.367070
+#+ Editado:	2022/02/15 22:06:52.179490
 # ------------------------------------------------------------------------------
 from dataclasses import dataclass
 from typing import List
@@ -29,7 +29,7 @@ class ProxyDTO:
         self.https = lst_contidos[6]
         self.dende = lst_contidos[7]
 
-    def __str__(self) -> str:
+    def format(self) -> dict[str, str]:
         return {'http': 'http://'+self.ip+':'+self.porto,
                 'https': 'http://'+self.ip+':'+self.porto}
 # ------------------------------------------------------------------------------
