@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/15 20:16:47.947387
+#+ Editado:	2022/02/15 21:07:29.323023
 # ------------------------------------------------------------------------------
 import requests
 from requests.models import Response
@@ -20,8 +20,9 @@ from excepcions import CambioNaPaxinaErro
 class Proxy:
     __ligazon: str = 'https://sslproxies.org'
     __verbose: bool = False
-    __max_cons: int = 0
-    __cant_cons: int = 0            # ó ser 0 implica que non ten un máximo predefinido
+    __max_cons: int = 0             # ó ser 0 implica que non ten un máximo predefinido
+    # xFCR: xuntar as cant_cons nunha soa variable
+    __cant_cons: int = 0
     __cant_cons_espido: int = 0
     __timeout: int = 30
     __cabeceira: dict[str, str]
@@ -36,13 +37,12 @@ class Proxy:
     def __init__(self, verbose=False, max_cons=0, timeout= 30) -> None:
         self.__verbose = verbose
         self.__max_cons = max_cons
-        self.__cant_cons = 0
-        self.__cant_cons_espido = 0
         self.__timeout = timeout
         self.__lst_proxys  = []
 
         self.set_cabeceira()    # Dalle valor a __cabeceira
-        self.__set_proxys()     # Enche a __lst_proxys
+        self.set_proxys()       # Enche a __lst_proxys
+        self.set_proxy()        # Saca un proxy da lista e meteo como atributo
 
     # Getters
     def get_ligazon(self) -> str:
@@ -76,52 +76,34 @@ class Proxy:
     def get_proxy(self) -> ProxyDTO:
         return self.__proxy
 
-    def set_novo_proxy(self) -> ProxyDTO:
-        """
-        Devolve un proxy e automáticamente eliminao da lista.
-        De non ter ningún proxy que devolver, escraperá a páxina
-        por máis.
+    def get_ligazons_ip(self) -> List[str]:
+        return self.__ligazons_ip
 
-        @entradas:
-            Ningunha.
-
-        @saídas:
-            ProxyDTO    -   Sempre
-            └ O proxy a usar nas conexións.
-        """
-        try:
-            return self.get_proxys().pop()
-        # se a lista de proxys está baleira
-        except IndexError:
-            self.__set_proxys()
-            return self.get_proxy()
-        finally:
-            self.__set_cant_cons(0)
     # Getters #
 
     # Setters
-    def __set_ligazon(self, nova_ligazon) -> None:
+    def __set_ligazon(self, nova_ligazon: str) -> None:
         self.__ligazon = nova_ligazon
 
-    def set_verbose(self, novo_verbose) -> None:
+    def set_verbose(self, novo_verbose: bool) -> None:
         self.__verbose = novo_verbose
 
-    def set_max_cons(self, novo_max_cons) -> None:
+    def set_max_cons(self, novo_max_cons: int) -> None:
         self.__max_cons = novo_max_cons
 
-    def __set_cant_cons(self, novo_cant_cons) -> None:
+    def __set_cant_cons(self, novo_cant_cons: int) -> None:
         self.__cant_cons = novo_cant_cons
 
-    def __set_cant_cons_espido(self, novo_cant_cons_espido) -> None:
+    def __set_cant_cons_espido(self, novo_cant_cons_espido: int) -> None:
         self.__cant_cons_espido = novo_cant_cons_espido
 
-    def set_timeout(self, novo_timeout) -> None:
+    def set_timeout(self, novo_timeout: int) -> None:
         self.__timeout = novo_timeout
 
     def set_cabeceira(self) -> None:
         self.__cabeceira = {'User-Agent': UserAgent().random}
 
-    def __set_proxys(self) -> None:
+    def set_proxys(self) -> None:
         """
         Colle a páxina e saca toda a info sobre os proxys que contén.
 
@@ -170,12 +152,44 @@ class Proxy:
         for fila in taboa_proxys.tbody:
             # métoos desta forma na lista porque así vou sacando e eliminando dende atrás
             self.__lst_proxys.insert(0, ProxyDTO([atributo.text for atributo in fila.find_all('td')]))
+
+    def set_proxy(self) -> None:
+        """
+        Devolve un proxy e automáticamente eliminao da lista.
+        De non ter ningún proxy que devolver, escraperá a páxina
+        por máis.
+
+        @entradas:
+            Ningunha.
+
+        @saídas:
+            ProxyDTO    -   Sempre
+            └ O proxy a usar nas conexións.
+        """
+
+        try:
+            self.__proxy = self.get_proxys().pop()
+        # se a lista de proxys está baleira
+        except IndexError:
+            self.set_proxys()
+            self.get_proxy()    # selfcall
+        finally:
+            self.__set_cant_cons(0)
+
     # Setters #
+
+    def aumentar_cant_cons(self) -> None:
+        self.__set_cant_cons(self.get_cant_cons()+1)
+
+    def aumentar_cant_cons_espido(self) -> None:
+        self.__set_cant_cons_espido(self.get_cant_cons_espido()+1)
 
     def get(self, ligazon: str, params: dict = None, bolachas: dict = None,
             stream: dict = False, timeout: int = 0) -> Response:
 
         # lazy_check_types
+
+        #self.
 
         if timeout != self.get_timeout():
             timeout = self.get_timeout()
@@ -187,8 +201,4 @@ class Proxy:
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
     p = Proxy()
-
-    print(len(p.get_proxys()))
-    print(p.get_proxy())
-    print(len(p.get_proxys()))
 # ------------------------------------------------------------------------------
