@@ -3,10 +3,11 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/15 22:26:41.269012
+#+ Editado:	2022/02/16 22:15:11.753487
 # ------------------------------------------------------------------------------
 import requests
 from requests.models import Response
+from requests.exceptions import ConnectionError
 from typing import List, Union
 #import secrets
 from bs4 import BeautifulSoup as bs
@@ -14,6 +15,10 @@ from fake_useragent import UserAgent
 
 from .dto_proxy import ProxyDTO
 from .excepcions import CambioNaPaxinaErro
+"""
+from dto_proxy import ProxyDTO
+from excepcions import CambioNaPaxinaErro
+"""
 # ------------------------------------------------------------------------------
 class Proxy:
     __ligazon: str = 'https://sslproxies.org'
@@ -22,6 +27,7 @@ class Proxy:
     # xFCR: xuntar as cant_cons nunha soa variable
     __cant_cons: int = 0
     __cant_cons_espido: int = 0
+    __reintentos: int = 5
     __timeout: int = 30
     __cabeceira: dict[str, str]
     __lst_proxys: List[ProxyDTO]    # Ordeados de máis velho[0] a máis novo[len()]
@@ -32,9 +38,10 @@ class Proxy:
             'https://icanhazip.com'
             ]
 
-    def __init__(self, verbose=False, max_cons=0, timeout= 30) -> None:
+    def __init__(self, verbose=False, max_cons= 0, reintentos= 5, timeout= 30) -> None:
         self.__verbose = verbose
         self.__max_cons = max_cons
+        self.__reintentos = reintentos
         self.__timeout = timeout
         self.__lst_proxys  = []
 
@@ -43,6 +50,7 @@ class Proxy:
         self.set_proxy()        # Saca un proxy da lista e meteo como atributo
 
     # Getters
+
     def get_ligazon(self) -> str:
         return self.__ligazon
 
@@ -58,6 +66,9 @@ class Proxy:
     def get_cant_cons_espido(self) -> int:
         return self.__cant_cons_espido
 
+    def get_reintentos(self) -> int:
+        return self.__reintentos
+
     def get_timeout(self) -> int:
         return self.__timeout
 
@@ -71,12 +82,18 @@ class Proxy:
     def get_proxys(self) -> List[ProxyDTO]:
         return self.__lst_proxys
 
-    def get_proxy(self) -> dict[str, str]:
+    def get_proxy(self) -> ProxyDTO:
+        #try:
+        # se se alcanzou o máximo sacar novo proxy
+        if (self.get_max_cons() != 0) and (self.get_cant_cons() >= self.get_max_cons()):
+            self.set_proxy()
+        return self.__proxy
+        #finally:
+            #self.__set_cant_cons(self.get_cant_cons()+1)
+
+    def __get_proxy(self) -> dict[str, str]:
         try:
-            # se se alcanzou o máximo sacar novo proxy
-            if (self.get_max_cons() != 0) and (self.get_cant_cons() >= self.get_max_cons()):
-                self.set_proxy()
-            return self.__proxy.format()
+            return self.get_proxy().format()
         finally:
             self.__set_cant_cons(self.get_cant_cons()+1)
 
@@ -86,11 +103,15 @@ class Proxy:
     # Getters #
 
     # Setters
+
     def __set_ligazon(self, nova_ligazon: str) -> None:
         self.__ligazon = nova_ligazon
 
     def set_verbose(self, novo_verbose: bool) -> None:
         self.__verbose = novo_verbose
+
+    def set_reintentos(self, novo_reintentos: int) -> None:
+        self.__reintentos = novo_reintentos
 
     def set_max_cons(self, novo_max_cons: int) -> None:
         self.__max_cons = novo_max_cons
@@ -154,8 +175,10 @@ class Proxy:
                 raise CambioNaPaxinaErro('Modificado o orde ou nome das columnas')
 
         for fila in taboa_proxys.tbody:
-            # métoos desta forma na lista porque así vou sacando e eliminando dende atrás
-            self.__lst_proxys.insert(0, ProxyDTO([atributo.text for atributo in fila.find_all('td')]))
+            novo_proxy = ProxyDTO([atributo.text for atributo in fila.find_all('td')])
+            if (novo_proxy.tipo == 'elite proxy') and (novo_proxy.google == 'no') and (novo_proxy.https == 'yes'):
+                # métoos desta forma na lista porque así vou sacando e eliminando dende atrás
+                self.__lst_proxys.insert(0, novo_proxy)
 
     def set_proxy(self) -> None:
         """
@@ -176,24 +199,46 @@ class Proxy:
         # se a lista de proxys está baleira
         except IndexError:
             self.set_proxys()
-            self.get_proxy()    # selfcall
+            self.get_proxy()    # recursion
         finally:
             self.__set_cant_cons(0)
 
     # Setters #
 
     def get(self, ligazon: str, params: dict = None, bolachas: dict = None,
-            stream: dict = False, timeout: int = None) -> Response:
+            stream: dict = False, timeout: int = None, reintentos: int = None) -> Response:
 
         # lazy_check_types
 
         #self.
 
-        if not timeout:
+        if timeout == None:
             timeout = self.get_timeout()
 
-        return requests.get(url= ligazon, params= params, proxies= self.get_proxy(),
+        if reintentos == None:
+            reintentos = self.get_reintentos()
+
+        try:
+            return requests.get(url= ligazon, params= params, proxies= self.__get_proxy(),
                 headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
                 stream= stream, timeout= timeout)
+        except ConnectionError:
+            print('erro')
+            if reintentos <= 0:
+                print()
+                self.set_proxy()
+                reintentos = self.get_reintentos()
+
+            return self.get(ligazon= ligazon, params= params, bolachas= bolachas,
+                    stream=stream, timeout= timeout, reintentos= (reintentos-1))
+
+# ------------------------------------------------------------------------------
+if __name__ == '__main__':
+    #p = Proxy(reintentos= 1)
+    p = Proxy()
+
+    print(p.get_cant_cons())
+    print(p.get('https://icanhazip.com').text.rstrip())
+    print(p.get_cant_cons())
 
 # ------------------------------------------------------------------------------
