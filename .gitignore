@@ -1,5 +1,5 @@
 *.pyc
-.coverage
 build/*
-*.pyc
 htmlcov/*
+.coverage
+*.pyc
