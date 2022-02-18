@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/16 22:15:11.753487
+#+ Editado:	2022/02/18 17:40:37.821900
 # ------------------------------------------------------------------------------
 import requests
 from requests.models import Response
@@ -15,12 +15,9 @@ from fake_useragent import UserAgent
 
 from .dto_proxy import ProxyDTO
 from .excepcions import CambioNaPaxinaErro
-"""
-from dto_proxy import ProxyDTO
-from excepcions import CambioNaPaxinaErro
-"""
 # ------------------------------------------------------------------------------
 class Proxy:
+    # Atributos da clase -------------------------------------------------------
     __ligazon: str = 'https://sslproxies.org'
     __verbose: bool = False
     __max_cons: int = 0             # ó ser 0 implica que non ten un máximo predefinido
@@ -37,6 +34,7 @@ class Proxy:
             'https://ip.me',
             'https://icanhazip.com'
             ]
+    # --------------------------------------------------------------------------
 
     def __init__(self, verbose=False, max_cons= 0, reintentos= 5, timeout= 30) -> None:
         self.__verbose = verbose
@@ -48,6 +46,7 @@ class Proxy:
         self.set_cabeceira()    # Dalle valor a __cabeceira
         self.set_proxys()       # Enche a __lst_proxys
         self.set_proxy()        # Saca un proxy da lista e meteo como atributo
+    # --------------------------------------------------------------------------
 
     # Getters
 
@@ -89,7 +88,6 @@ class Proxy:
             self.set_proxy()
         return self.__proxy
         #finally:
-            #self.__set_cant_cons(self.get_cant_cons()+1)
 
     def __get_proxy(self) -> dict[str, str]:
         try:
@@ -205,8 +203,16 @@ class Proxy:
 
     # Setters #
 
+    def __aumentar_cant_cons(self, cantidade: int = 1) -> None:
+        """
+        """
+
+        self.__set_cant_cons(self.get_cant_cons()+cantidade)
+
     def get(self, ligazon: str, params: dict = None, bolachas: dict = None,
             stream: dict = False, timeout: int = None, reintentos: int = None) -> Response:
+        """
+        """
 
         # lazy_check_types
 
@@ -223,22 +229,14 @@ class Proxy:
                 headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
                 stream= stream, timeout= timeout)
         except ConnectionError:
-            print('erro')
             if reintentos <= 0:
-                print()
                 self.set_proxy()
                 reintentos = self.get_reintentos()
 
             return self.get(ligazon= ligazon, params= params, bolachas= bolachas,
                     stream=stream, timeout= timeout, reintentos= (reintentos-1))
-
-# ------------------------------------------------------------------------------
-if __name__ == '__main__':
-    #p = Proxy(reintentos= 1)
-    p = Proxy()
-
-    print(p.get_cant_cons())
-    print(p.get('https://icanhazip.com').text.rstrip())
-    print(p.get_cant_cons())
+        finally:
+            # esto igual da problemas polo feito de que se chama a si mesmo. comprobar.
+            self.__aumentar_cant_cons()
 
 # ------------------------------------------------------------------------------

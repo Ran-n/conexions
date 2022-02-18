@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/12 19:50:16.098183
-#+ Editado:	2022/02/16 22:38:43.933095
+#+ Editado:	2022/02/18 17:43:17.394873
 # ------------------------------------------------------------------------------
 import unittest
 import requests
@@ -347,24 +347,21 @@ class TestProxy(unittest.TestCase):
 
     # Setters #
 
-    '''
     def test_get(self) -> None:
         """
         """
 
-        p = Proxy()
+        p = Proxy(reintentos= 1)
+
+        ip_usada = p.get(self.lig).text.rstrip()
 
         self.assertEqual(p.get_proxy().https, 'yes')
 
-        self.assertEqual(p.get(self.lig).text.rstrip(), p.get_proxy().ip)
-        #self.assertNotEqual(p.get(self.lig).text.rstrip(), self.ip_clara)
-        pax_content = p.get(self.lig)
-        #print(pax_content)
-        #print(pax_content.text)
-        self.assertIsNotNone(pax_content.text)
+        self.assertIsNotNone(ip_usada)
+        self.assertNotEqual(ip_usada, self.ip_clara)
+        self.assertEqual(ip_usada, p.get_proxy().ip)
 
         self.assertEqual(p.get_cant_cons(), 1)
-    '''
 
 
 
