@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/12 19:50:16.098183
-#+ Editado:	2022/02/18 17:43:17.394873
+#+ Editado:	2022/02/18 20:39:46.622380
 # ------------------------------------------------------------------------------
 import unittest
 import requests
@@ -113,6 +113,14 @@ class TestProxy(unittest.TestCase):
         p = Proxy()
 
         self.assertEqual(p.get_ligazon(), self.lig_proxys)
+
+    def test_get_sesion(self) -> None:
+        """
+        """
+
+        p = Proxy()
+
+        self.assertIsNone(p.get_sesion())
 
     def test_get_verbose(self) -> None:
         """
@@ -239,6 +247,17 @@ class TestProxy(unittest.TestCase):
         p._Proxy__set_ligazon(nova_lig)
         self.assertEqual(p.get_ligazon(), nova_lig)
 
+    def test_priv_set_ligazon(self) -> None:
+        """
+        """
+
+        p = Proxy()
+
+        self.assertIsNone(p.get_sesion())
+
+        p.set_sesion()
+        self.assertIsNotNone(p.get_sesion())
+
     def test_set_verbose(self) -> None:
         """
         """
@@ -351,7 +370,7 @@ class TestProxy(unittest.TestCase):
         """
         """
 
-        p = Proxy(reintentos= 1)
+        p = Proxy()
 
         ip_usada = p.get(self.lig).text.rstrip()
 
@@ -361,9 +380,6 @@ class TestProxy(unittest.TestCase):
         self.assertNotEqual(ip_usada, self.ip_clara)
         self.assertEqual(ip_usada, p.get_proxy().ip)
 
-        self.assertEqual(p.get_cant_cons(), 1)
-
-
-
+        self.assertTrue(p.get_cant_cons() >= 1)
 
 # ------------------------------------------------------------------------------

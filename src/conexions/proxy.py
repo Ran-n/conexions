@@ -3,9 +3,10 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/18 17:40:37.821900
+#+ Editado:	2022/02/18 20:42:42.188661
 # ------------------------------------------------------------------------------
 import requests
+from requests.sessions import Session
 from requests.models import Response
 from requests.exceptions import ConnectionError
 from typing import List, Union
@@ -19,6 +20,7 @@ from .excepcions import CambioNaPaxinaErro
 class Proxy:
     # Atributos da clase -------------------------------------------------------
     __ligazon: str = 'https://sslproxies.org'
+    __sesion: Session = None
     __verbose: bool = False
     __max_cons: int = 0             # ó ser 0 implica que non ten un máximo predefinido
     # xFCR: xuntar as cant_cons nunha soa variable
@@ -53,6 +55,12 @@ class Proxy:
     def get_ligazon(self) -> str:
         return self.__ligazon
 
+    def get_sesion(self) -> Session:
+        """
+        """
+
+        return self.__sesion
+
     def get_verbose(self) -> bool:
         return self.__verbose
 
@@ -82,12 +90,10 @@ class Proxy:
         return self.__lst_proxys
 
     def get_proxy(self) -> ProxyDTO:
-        #try:
         # se se alcanzou o máximo sacar novo proxy
         if (self.get_max_cons() != 0) and (self.get_cant_cons() >= self.get_max_cons()):
             self.set_proxy()
         return self.__proxy
-        #finally:
 
     def __get_proxy(self) -> dict[str, str]:
         try:
@@ -104,6 +110,15 @@ class Proxy:
 
     def __set_ligazon(self, nova_ligazon: str) -> None:
         self.__ligazon = nova_ligazon
+
+    def set_sesion(self, reset: Union[bool, int] = False) -> None:
+        """
+        """
+
+        if reset:
+            self.__sesion = None
+        else:
+            self.__sesion = requests.Session()
 
     def set_verbose(self, novo_verbose: bool) -> None:
         self.__verbose = novo_verbose
@@ -203,12 +218,6 @@ class Proxy:
 
     # Setters #
 
-    def __aumentar_cant_cons(self, cantidade: int = 1) -> None:
-        """
-        """
-
-        self.__set_cant_cons(self.get_cant_cons()+cantidade)
-
     def get(self, ligazon: str, params: dict = None, bolachas: dict = None,
             stream: dict = False, timeout: int = None, reintentos: int = None) -> Response:
         """
@@ -225,18 +234,20 @@ class Proxy:
             reintentos = self.get_reintentos()
 
         try:
-            return requests.get(url= ligazon, params= params, proxies= self.__get_proxy(),
-                headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
-                stream= stream, timeout= timeout)
+            if self.get_sesion() != None:
+                return self.get_sesion().get(url= ligazon, params= params, proxies= self.__get_proxy(),
+                                            headers= self.get_cabeceira(), cookies= bolachas,
+                                            stream= stream, timeout= timeout)
+            else:
+                return requests.get(url= ligazon, params= params, proxies= self.__get_proxy(),
+                                    headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
+                                    stream= stream, timeout= timeout)
         except ConnectionError:
             if reintentos <= 0:
                 self.set_proxy()
                 reintentos = self.get_reintentos()
 
             return self.get(ligazon= ligazon, params= params, bolachas= bolachas,
-                    stream=stream, timeout= timeout, reintentos= (reintentos-1))
-        finally:
-            # esto igual da problemas polo feito de que se chama a si mesmo. comprobar.
-            self.__aumentar_cant_cons()
+                    stream=stream, timeout= timeout, reintentos= reintentos-1)
 
 # ------------------------------------------------------------------------------
