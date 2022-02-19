@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/19 17:33:34.276710
+#+ Editado:	2022/02/19 18:18:49.346119
 # ------------------------------------------------------------------------------
 import requests
 from requests.sessions import Session
@@ -308,7 +308,7 @@ class Proxy:
                 return requests.get(url= ligazon, params= params, proxies= self.__get_proxy(),
                                     headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
                                     stream= stream, timeout= timeout)
-        except ConnectionError:
+        except:
             if self.get_verbose(): print(f'\n* Reintento nº {self.get_reintentos()-reintentos}')
             if reintentos <= 0:
                 if self.get_verbose(): print('* Collendo novo proxy, chegouse á cantidade máxima de reintentos')
