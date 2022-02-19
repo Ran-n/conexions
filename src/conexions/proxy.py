@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/18 20:42:42.188661
+#+ Editado:	2022/02/19 17:33:34.276710
 # ------------------------------------------------------------------------------
 import requests
 from requests.sessions import Session
@@ -13,6 +13,7 @@ from typing import List, Union
 #import secrets
 from bs4 import BeautifulSoup as bs
 from fake_useragent import UserAgent
+from halo import Halo
 
 from .dto_proxy import ProxyDTO
 from .excepcions import CambioNaPaxinaErro
@@ -31,6 +32,7 @@ class Proxy:
     __cabeceira: dict[str, str]
     __lst_proxys: List[ProxyDTO]    # Ordeados de máis velho[0] a máis novo[len()]
     __proxy: ProxyDTO
+    __spinner: Halo = Halo(text='Conectando', spinner='dots')
 
     __ligazons_ip: List[str] = [
             'https://ip.me',
@@ -49,6 +51,7 @@ class Proxy:
         self.set_proxys()       # Enche a __lst_proxys
         self.set_proxy()        # Saca un proxy da lista e meteo como atributo
     # --------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
     # Getters
 
@@ -103,6 +106,9 @@ class Proxy:
 
     def get_ligazons_ip(self) -> List[str]:
         return self.__ligazons_ip
+
+    def get_spinner(self) -> Halo:
+        return self.__spinner
 
     # Getters #
 
@@ -218,6 +224,60 @@ class Proxy:
 
     # Setters #
 
+    def get_ip(self, reintentos: int = None) -> str:
+        """
+        """
+
+        if reintentos == None:
+            reintentos = self.get_reintentos()
+
+        try:
+            return requests.get(self.get_ligazons_ip()[0]).text.rstrip()
+        except ConnectionError:
+            return self.get_ip(reintentos-1)
+
+    def get_espido (self, ligazon: str, params: dict = None, bolachas: dict = None,
+                stream: dict = False, timeout: int = None, reintentos: int = None) -> Response:
+        """
+        """
+
+        # lazy_check_types
+
+        #self.
+
+        if timeout == None:
+            timeout = self.get_timeout()
+
+        if reintentos == None:
+            if self.get_verbose(): print('* Chegouse á cantidade máxima de conexións')
+            reintentos = self.get_reintentos()
+
+        if self.get_cant_cons() >= self.get_max_cons():
+            self.__set_cant_cons_espido(0)
+            reintentos = self.get_reintentos()
+
+        try:
+            if self.get_verbose(): self.get_spinner().start()
+            if self.get_sesion() != None:
+                return self.get_sesion().get(url= ligazon, params= params,
+                                            headers= self.get_cabeceira(), cookies= bolachas,
+                                            stream= stream, timeout= timeout)
+            else:
+                return requests.get(url= ligazon, params= params,
+                                    headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
+                                    stream= stream, timeout= timeout)
+        except ConnectionError:
+            if self.get_verbose(): print(f'\n* Reintento nº {self.get_reintentos()-reintentos}')
+            if reintentos <= 0:
+                if self.get_verbose(): print('* Chegouse á cantidade máxima de reintentos')
+                reintentos = self.get_reintentos()
+
+            return self.get(ligazon= ligazon, params= params, bolachas= bolachas,
+                    stream=stream, timeout= timeout, reintentos= reintentos-1)
+        finally:
+            self.__set_cant_cons_espido(self.get_cant_cons_espido()+1)
+            self.get_spinner().stop()
+
     def get(self, ligazon: str, params: dict = None, bolachas: dict = None,
             stream: dict = False, timeout: int = None, reintentos: int = None) -> Response:
         """
@@ -233,7 +293,14 @@ class Proxy:
         if reintentos == None:
             reintentos = self.get_reintentos()
 
+        if (self.get_max_cons() != 0) and (self.get_cant_cons() >= self.get_max_cons()):
+            if self.get_verbose(): print('* Collendo novo proxy, chegouse á cantidade máxima de conexións')
+            self.set_proxy()
+            self.__set_cant_cons(0)
+            reintentos = self.get_reintentos()
+
         try:
+            if self.get_verbose(): self.get_spinner().start()
             if self.get_sesion() != None:
                 return self.get_sesion().get(url= ligazon, params= params, proxies= self.__get_proxy(),
                                             headers= self.get_cabeceira(), cookies= bolachas,
@@ -243,11 +310,15 @@ class Proxy:
                                     headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
                                     stream= stream, timeout= timeout)
         except ConnectionError:
+            if self.get_verbose(): print(f'\n* Reintento nº {self.get_reintentos()-reintentos}')
             if reintentos <= 0:
+                if self.get_verbose(): print('* Collendo novo proxy, chegouse á cantidade máxima de reintentos')
                 self.set_proxy()
                 reintentos = self.get_reintentos()
 
             return self.get(ligazon= ligazon, params= params, bolachas= bolachas,
                     stream=stream, timeout= timeout, reintentos= reintentos-1)
+        finally:
+            self.get_spinner().stop()
 
 # ------------------------------------------------------------------------------

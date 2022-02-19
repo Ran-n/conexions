@@ -3,6 +3,8 @@ README.md
 pyproject.toml
 setup.cfg
 src/conexions/__init__.py
+src/conexions/dto_proxy.py
+src/conexions/excepcions.py
 src/conexions/proxy.py
 src/conexions.egg-info/PKG-INFO
 src/conexions.egg-info/SOURCES.txt
