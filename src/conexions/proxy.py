@@ -51,7 +51,6 @@ class Proxy:
         self.set_proxys()       # Enche a __lst_proxys
         self.set_proxy()        # Saca un proxy da lista e meteo como atributo
     # --------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 
     # Getters
 
