@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/19 18:18:49.346119
+#+ Editado:	2022/02/23 19:03:25.235483
 # ------------------------------------------------------------------------------
 import requests
 from requests.sessions import Session
@@ -23,6 +23,7 @@ class Proxy:
     __ligazon: str = 'https://sslproxies.org'
     __sesion: Session = None
     __verbose: bool = False
+    __verbosalo: bool = False
     __max_cons: int = 0             # ó ser 0 implica que non ten un máximo predefinido
     # xFCR: xuntar as cant_cons nunha soa variable
     __cant_cons: int = 0
@@ -40,8 +41,9 @@ class Proxy:
             ]
     # --------------------------------------------------------------------------
 
-    def __init__(self, verbose=False, max_cons= 0, reintentos= 5, timeout= 30) -> None:
+    def __init__(self, max_cons= 0, reintentos= 5, timeout= 30, verbose=False, verbosalo= False) -> None:
         self.__verbose = verbose
+        self.__verbosalo = verbosalo
         self.__max_cons = max_cons
         self.__reintentos = reintentos
         self.__timeout = timeout
@@ -65,6 +67,9 @@ class Proxy:
 
     def get_verbose(self) -> bool:
         return self.__verbose
+
+    def get_verbosalo(self) -> bool:
+        return self.__verbosalo
 
     def get_max_cons(self) -> int:
         return self.__max_cons
@@ -127,6 +132,9 @@ class Proxy:
 
     def set_verbose(self, novo_verbose: bool) -> None:
         self.__verbose = novo_verbose
+
+    def set_verbosalo(self, novo_verbosalo: bool) -> None:
+        self.__verbosalo = novo_verbosalo
 
     def set_reintentos(self, novo_reintentos: int) -> None:
         self.__reintentos = novo_reintentos
@@ -284,8 +292,6 @@ class Proxy:
 
         # lazy_check_types
 
-        #self.
-
         if timeout == None:
             timeout = self.get_timeout()
 
@@ -299,7 +305,7 @@ class Proxy:
             reintentos = self.get_reintentos()
 
         try:
-            if self.get_verbose(): self.get_spinner().start()
+            if self.get_verbosalo(): self.get_spinner().start()
             if self.get_sesion() != None:
                 return self.get_sesion().get(url= ligazon, params= params, proxies= self.__get_proxy(),
                                             headers= self.get_cabeceira(), cookies= bolachas,
@@ -309,7 +315,7 @@ class Proxy:
                                     headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
                                     stream= stream, timeout= timeout)
         except:
-            if self.get_verbose(): print(f'\n* Reintento nº {self.get_reintentos()-reintentos}')
+            if self.get_verbose(): print(f'* Reintento nº {self.get_reintentos()-reintentos}')
             if reintentos <= 0:
                 if self.get_verbose(): print('* Collendo novo proxy, chegouse á cantidade máxima de reintentos')
                 self.set_proxy()
@@ -318,6 +324,6 @@ class Proxy:
             return self.get(ligazon= ligazon, params= params, bolachas= bolachas,
                     stream=stream, timeout= timeout, reintentos= reintentos-1)
         finally:
-            self.get_spinner().stop()
+            if self.get_verbosalo(): self.get_spinner().stop()
 
 # ------------------------------------------------------------------------------

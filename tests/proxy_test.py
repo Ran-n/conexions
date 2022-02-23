@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/12 19:50:16.098183
-#+ Editado:	2022/02/19 16:21:34.813382
+#+ Editado:	2022/02/23 18:56:49.420710
 # ------------------------------------------------------------------------------
 import unittest
 import requests
@@ -128,6 +128,13 @@ class TestProxy(unittest.TestCase):
 
         self.assertFalse(Proxy().get_verbose())
         self.assertTrue(Proxy(verbose= True).get_verbose())
+
+    def test_get_verbosalo(self) -> None:
+        """
+        """
+
+        self.assertFalse(Proxy().get_verbosalo())
+        self.assertTrue(Proxy(verbosalo= True).get_verbosalo())
 
     def test_get_max_cons(self) -> None:
         """
@@ -267,6 +274,16 @@ class TestProxy(unittest.TestCase):
 
         p.set_verbose(True)
         self.assertTrue(p.get_verbose())
+
+    def test_set_verbosalo(self) -> None:
+        """
+        """
+
+        p = Proxy()
+        self.assertFalse(p.get_verbosalo())
+
+        p.set_verbosalo(True)
+        self.assertTrue(p.get_verbosalo())
 
     def test_set_max_cons(self) -> None:
         """
