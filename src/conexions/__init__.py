@@ -17,7 +17,7 @@ from .proxy import Proxy
 # ------------------------------------------------------------------------------
 
 __nome__ = 'conexions'
-__version__ = '1.2'
+__version__ = '1.3'
 __autor__ = 'Ran#'
 __creditos__ = 'Ran#'
 __licenza__ = 'GPLv3'
