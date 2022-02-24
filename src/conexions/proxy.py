@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/23 19:47:38.314143
+#+ Editado:	2022/02/24 22:11:07.655672
 # ------------------------------------------------------------------------------
 import requests
 from requests.sessions import Session
@@ -26,6 +26,7 @@ class Proxy:
     __verbosalo: bool = False
     __max_cons: int = 0             # ó ser 0 implica que non ten un máximo predefinido
     # xFCR: xuntar as cant_cons nunha soa variable
+    __cant_cons_totais: int = 0
     __cant_cons: int = 0
     __cant_cons_espido: int = 0
     __reintentos: int = 5
@@ -74,6 +75,9 @@ class Proxy:
     def get_max_cons(self) -> int:
         return self.__max_cons
 
+    def get_cant_cons_totais(self) -> int:
+        return self.__cant_cons_totais
+
     def get_cant_cons(self) -> int:
         return self.__cant_cons
 
@@ -107,6 +111,7 @@ class Proxy:
             return self.get_proxy().format()
         finally:
             self.__set_cant_cons(self.get_cant_cons()+1)
+            self.__set_cant_cons_totais(self.get_cant_cons_totais()+1)
 
     def get_ligazons_ip(self) -> List[str]:
         return self.__ligazons_ip
@@ -141,6 +146,9 @@ class Proxy:
 
     def set_max_cons(self, novo_max_cons: int) -> None:
         self.__max_cons = novo_max_cons
+
+    def __set_cant_cons_totais(self, novo_cant_cons_totais: int) -> None:
+        self.__cant_cons_totais = novo_cant_cons_totais
 
     def __set_cant_cons(self, novo_cant_cons: int) -> None:
         self.__cant_cons = novo_cant_cons
@@ -178,6 +186,8 @@ class Proxy:
                 if pax_web.ok:
                     pax_web.encoding = 'utf-8'
                     break
+
+        if self.get_verbose() and self.get_cant_cons_totais()>0: print(f'{__name__}: Enchendo a lista de proxys.')
 
         taboa_proxys = bs(pax_web.text, 'html.parser').find(class_='table')
 
@@ -284,6 +294,7 @@ class Proxy:
                     stream=stream, timeout= timeout, reintentos= reintentos-1)
         finally:
             self.__set_cant_cons_espido(self.get_cant_cons_espido()+1)
+            self.__set_cant_cons_totais(self.get_cant_cons_totais()+1)
             if self.get_verbosalo(): self.get_spinner().stop()
 
     def get(self, ligazon: str, params: dict = None, bolachas: dict = None,
@@ -300,7 +311,7 @@ class Proxy:
             reintentos = self.get_reintentos()
 
         if (self.get_max_cons() != 0) and (self.get_cant_cons() >= self.get_max_cons()):
-            if self.get_verbose(): print(f'{__name__}: Collendo novo proxy, chegouse á cantidade máxima de conexións.')
+            if self.get_verbose(): print(f'{__name__}: Chegouse á cantidade máxima de conexións. Collendo novo proxy ({len(self.get_proxys)} restantes)')
             self.set_proxy()
             self.__set_cant_cons(0)
             reintentos = self.get_reintentos()
@@ -318,7 +329,7 @@ class Proxy:
                                         stream= stream, timeout= timeout)
         except:
             if reintentos <= 0:
-                if self.get_verbose(): print(f'{__name__}: Collendo novo proxy, chegouse á cantidade máxima de reintentos.')
+                if self.get_verbose(): print(f'{__name__}: Chegouse á cantidade máxima de reintentos. Collendo novo proxy ({len(self.get_proxys)} restantes)')
                 self.set_proxy()
                 reintentos = self.get_reintentos()
             if self.get_verbose(): print(f'{__name__}: Reintento nº {self.get_reintentos()+1-reintentos}.')
