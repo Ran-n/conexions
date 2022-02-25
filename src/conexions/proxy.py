@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/24 22:11:07.655672
+#+ Editado:	2022/02/25 19:50:21.594408
 # ------------------------------------------------------------------------------
 import requests
 from requests.sessions import Session
@@ -311,7 +311,7 @@ class Proxy:
             reintentos = self.get_reintentos()
 
         if (self.get_max_cons() != 0) and (self.get_cant_cons() >= self.get_max_cons()):
-            if self.get_verbose(): print(f'{__name__}: Chegouse á cantidade máxima de conexións. Collendo novo proxy ({len(self.get_proxys)} restantes)')
+            if self.get_verbose(): print(f'{__name__}: Chegouse á cantidade máxima de conexións. Collendo novo proxy ({len(self.get_proxys())} restantes)')
             self.set_proxy()
             self.__set_cant_cons(0)
             reintentos = self.get_reintentos()
@@ -329,7 +329,7 @@ class Proxy:
                                         stream= stream, timeout= timeout)
         except:
             if reintentos <= 0:
-                if self.get_verbose(): print(f'{__name__}: Chegouse á cantidade máxima de reintentos. Collendo novo proxy ({len(self.get_proxys)} restantes)')
+                if self.get_verbose(): print(f'{__name__}: Chegouse á cantidade máxima de reintentos. Collendo novo proxy ({len(self.get_proxys())} restantes)')
                 self.set_proxy()
                 reintentos = self.get_reintentos()
             if self.get_verbose(): print(f'{__name__}: Reintento nº {self.get_reintentos()+1-reintentos}.')
