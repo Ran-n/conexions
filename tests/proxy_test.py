@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/12 19:50:16.098183
-#+ Editado:	2022/02/23 18:56:49.420710
+#+ Editado:	2022/02/26 19:18:04.662059
 # ------------------------------------------------------------------------------
 import unittest
 import requests
@@ -142,6 +142,14 @@ class TestProxy(unittest.TestCase):
 
         self.assertEqual(Proxy().get_max_cons(), 0)
         self.assertEqual(Proxy(max_cons= 5).get_max_cons(), 5)
+
+    def test_get_cant_cons_totais(self) -> None:
+        """
+        """
+
+        p = Proxy()
+
+        self.assertEqual(p.get_cant_cons_totais(), 0)
 
     def test_get_cant_cons(self) -> None:
         """
@@ -295,6 +303,14 @@ class TestProxy(unittest.TestCase):
         p.set_max_cons(11)
         self.assertEqual(p.get_max_cons(), 11)
 
+    def test_priv_set_cant_cons_totais(self) -> None:
+        """
+        """
+
+        p = Proxy()
+        p._Proxy__set_cant_cons_totais(60)
+        self.assertEqual(p.get_cant_cons_totais(), 60)
+
     def test_priv_set_cant_cons(self) -> None:
         """
         """
@@ -421,12 +437,20 @@ class TestProxy(unittest.TestCase):
 
         self.assertIsNotNone(ip_usada)
         self.assertNotEqual(ip_usada, self.ip_clara)
-        self.assertEqual(ip_usada, p.get_proxy().ip)
+        # pode ocorrer que a ip usada e reportada sexan distintas
+        #self.assertEqual(ip_usada, p.get_proxy().ip)
 
+        len1 = len(p.get_proxys())
         self.assertTrue(p.get_cant_cons() >= 1)
 
         p.set_max_cons(1)
         ip_usada2 = p.get(self.lig).text.rstrip()
+
+        self.assertNotEqual(ip_usada2, self.ip_clara)
+        # pode ocorrer que a ip usada e reportada sexan distintas
+        #self.assertEqual(ip_usada2, p.get_proxy().ip)
+
+        self.assertNotEqual(len1, len(p.get_proxys()))
         self.assertNotEqual(ip_usada, ip_usada2)
         self.assertTrue(p.get_cant_cons() <= 1)
 # ------------------------------------------------------------------------------

@@ -25,5 +25,5 @@ WW2RheTNrq8goAi42Dz5AKUj1qLSaTSSgiH7sHR2qRqojg238EXP3MM3xuUgswriET7UrpkEoYaCkecB
 
 ## [xFCR](./doc/xFCR/indice.md)
 
-- [ ] Facer os tests do contador de conexións totais.
+- [X] Facer os tests do contador de conexións totais.
 - [ ] Crear base de datos cos proxys.
