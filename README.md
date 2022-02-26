@@ -23,7 +23,7 @@ bc1q79vja8jzr27dxaf3ylu7e49ady8zq0jsm5qfk6
 **Wownero** <img src="https://raw.githubusercontent.com/Ran-n/svgs/main/divisas/wownero/wownero_0.svg" width="20" alt="wownero logo" title="Wownero">
 WW2RheTNrq8goAi42Dz5AKUj1qLSaTSSgiH7sHR2qRqojg238EXP3MM3xuUgswriET7UrpkEoYaCkecBhnU49oxM1dZyYoSmm
 
-## xFCR
+## [xFCR](./doc/xFCR/indice.md)
 
 - [ ] Facer os tests do contador de conexións totais.
 - [ ] Crear base de datos cos proxys.
