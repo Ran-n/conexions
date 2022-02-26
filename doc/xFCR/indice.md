@@ -1,3 +1,5 @@
+[🏠Inicio](../../README.md)
+
 # Índice de versións
 
-- [ ] [v2.3](./v2.3.md)
+- [ ] [v2.3](v2.3.md)
