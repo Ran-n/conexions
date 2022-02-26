@@ -3,4 +3,4 @@
 
 # Índice de versións
 
-- [ ] [v2.3](v2.3.md)
+- [ ] [v1.3](v1.3.md)
