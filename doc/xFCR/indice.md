@@ -1,4 +1,4 @@
-[↩️](../../README.md)
+[🔙](../../README.md)
 [🏠](../../README.md)
 
 # Índice de versións
