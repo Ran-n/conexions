@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/12 19:50:16.098183
-#+ Editado:	2022/02/26 19:18:04.662059
+#+ Editado:	2022/02/26 23:24:49.125721
 # ------------------------------------------------------------------------------
 import unittest
 import requests
@@ -425,6 +425,8 @@ class TestProxy(unittest.TestCase):
         self.assertEqual(ip_usada, ip_usada2)
         self.assertTrue(p.get_cant_cons() <= 1)
 
+        self.assertTrue(p.get_cant_cons_totais() == 2)
+
     def test_get(self) -> None:
         """
         """
@@ -453,4 +455,9 @@ class TestProxy(unittest.TestCase):
         self.assertNotEqual(len1, len(p.get_proxys()))
         self.assertNotEqual(ip_usada, ip_usada2)
         self.assertTrue(p.get_cant_cons() <= 1)
+
+        self.assertTrue(p.get_cant_cons_totais() >= 2)
+
+        p.get_espido(self.lig).text.rstrip()
+        self.assertTrue(p.get_cant_cons_totais() >= 3)
 # ------------------------------------------------------------------------------
