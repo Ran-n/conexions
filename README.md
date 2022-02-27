@@ -26,3 +26,4 @@ WW2RheTNrq8goAi42Dz5AKUj1qLSaTSSgiH7sHR2qRqojg238EXP3MM3xuUgswriET7UrpkEoYaCkecB
 ## [xFCR](./doc/xFCR/indice.md)
 
 - [ ] Crear base de datos cos proxys.
+- [ ] Facer que os sets de vars booleanas permitan meter 1 ou 0 como True False.
