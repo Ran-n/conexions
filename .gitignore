@@ -28,5 +28,8 @@ uv.lock
 htmlcov/
 .pytest_cache/
 
+# IDE
+.vscode/
+
 # Misc
 .DS_Store
