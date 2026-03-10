@@ -1,13 +1,16 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------------------------
-#+ Autor:  	Ran#
-#+ Creado: 	2022/02/13 15:30:39.408208
-#+ Editado:	2026/03/10 20:45:15.798674
+# + Authors:	Ran#
+# + Created:	2022/02/13 15:30:39.408208
+# + Revised:	2026/03/10 22:30:00.000000
 # ------------------------------------------------------------------------------
+
 from dataclasses import dataclass
-from typing import List
+
 # ------------------------------------------------------------------------------
+
+
 @dataclass
 class ProxyDTO:
     ip: str
@@ -19,7 +22,7 @@ class ProxyDTO:
     https: str
     last_checked: str
 
-    def __init__(self, lst_contents: List) -> None:
+    def __init__(self, lst_contents: list) -> None:
         self.ip = lst_contents[0]
         self.port = lst_contents[1]
         self.country_code = lst_contents[2]
@@ -30,6 +33,10 @@ class ProxyDTO:
         self.last_checked = lst_contents[7]
 
     def format(self) -> dict[str, str]:
-        return {'http': 'http://'+self.ip+':'+self.port,
-                'https': 'http://'+self.ip+':'+self.port}
+        return {
+            "http": f"http://{self.ip}:{self.port}",
+            "https": f"http://{self.ip}:{self.port}",
+        }
+
+
 # ------------------------------------------------------------------------------

@@ -1,15 +1,14 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------------------------
-#+ Autor:  	Ran#
-#+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2026/03/10 20:45:15.798674
+#+ Authors:	Ran#
+#+ Created:	2022/02/13 16:43:37.259437
+#+ Revised:	2026/03/10 22:30:00.000000
 # ------------------------------------------------------------------------------
 import requests
 from requests.sessions import Session
 from requests.models import Response
 from requests.exceptions import ConnectionError
-from typing import List, Union
 #import secrets
 from bs4 import BeautifulSoup as bs
 from fake_useragent import UserAgent
@@ -33,23 +32,26 @@ class Proxy:
     __retries: int = 5
     __timeout: int = 30
     __header: dict[str, str]
-    __proxy_list: List[ProxyDTO]    # Ordered oldest[0] to newest[len()]
+    __proxy_list: list[ProxyDTO]    # Ordered oldest[0] to newest[len()]
     __proxy: ProxyDTO
-    __spinner = yaspin(text='Connecting', spinner=Spinners.dots)
 
-    __ip_urls: List[str] = [
+    __ip_urls: list[str] = [
             'https://ip.me',
             'https://icanhazip.com'
             ]
     # --------------------------------------------------------------------------
 
-    def __init__(self, max_connections= 0, retries= 5, timeout= 30, verbose=False, show_spinner= False) -> None:
+    def __init__(self, max_connections: int = 0, retries: int = 5, timeout: int = 30, verbose: bool = False, show_spinner: bool = False) -> None:
         self.__verbose = verbose
         self.__show_spinner = show_spinner
         self.__max_connections = max_connections
         self.__retries = retries
         self.__timeout = timeout
         self.__proxy_list  = []
+        self.__total_connections = 0
+        self.__connection_count = 0
+        self.__direct_connection_count = 0
+        self.__spinner = yaspin(text='Connecting', spinner=Spinners.dots)
 
         self.set_header()       # Sets __header
         self.set_proxies()      # Fills __proxy_list
@@ -61,7 +63,7 @@ class Proxy:
     def get_url(self) -> str:
         return self.__url
 
-    def get_session(self) -> Session:
+    def get_session(self) -> Session | None:
         return self.__session
 
     def get_verbose(self) -> bool:
@@ -88,14 +90,14 @@ class Proxy:
     def get_timeout(self) -> int:
         return self.__timeout
 
-    def get_header(self, refresh: Union[bool, int] = False) -> dict[str, str]:
+    def get_header(self, refresh: bool | int = False) -> dict[str, str]:
         try:
             return self.__header
         finally:
             if refresh:
                 self.set_header()
 
-    def get_proxies(self) -> List[ProxyDTO]:
+    def get_proxies(self) -> list[ProxyDTO]:
         return self.__proxy_list
 
     def get_proxy(self) -> ProxyDTO:
@@ -111,7 +113,7 @@ class Proxy:
             self.__set_connection_count(self.get_connection_count()+1)
             self.__set_total_connections(self.get_total_connections()+1)
 
-    def get_ip_urls(self) -> List[str]:
+    def get_ip_urls(self) -> list[str]:
         return self.__ip_urls
 
     def get_spinner(self):
@@ -124,7 +126,7 @@ class Proxy:
     def __set_url(self, url: str) -> None:
         self.__url = url
 
-    def set_session(self, reset: Union[bool, int] = False) -> None:
+    def set_session(self, reset: bool | int = False) -> None:
         if reset:
             self.__session = None
         else:
@@ -175,7 +177,8 @@ class Proxy:
                     page.encoding = 'utf-8'
                     break
 
-        if self.get_verbose() and self.get_total_connections()>0: print(f'{__name__}: Filling proxy list.')
+        if self.get_verbose() and self.get_total_connections() > 0:
+            print(f'{__name__}: Filling proxy list.')
 
         proxy_table = bs(page.text, 'html.parser').find(class_='table')
 
@@ -214,14 +217,14 @@ class Proxy:
             self.__proxy = self.get_proxies().pop()
         except IndexError:
             self.set_proxies()
-            self.get_proxy()    # recursion
+            self.set_proxy()    # recursion
         finally:
             self.__set_connection_count(0)
 
     # Setters #
 
-    def get_ip(self, retries: int = None) -> str:
-        if retries == None:
+    def get_ip(self, retries: int | None = None) -> str:
+        if retries is None:
             retries = self.get_retries()
 
         try:
@@ -229,26 +232,26 @@ class Proxy:
         except ConnectionError:
             return self.get_ip(retries-1)
 
-    def get_direct(self, url: str, params: dict = None, cookies: dict = None,
-                stream: dict = False, timeout: int = None, retries: int = None) -> Response:
+    def get_direct(self, url: str, params: dict | None = None, cookies: dict | None = None,
+                stream: bool = False, timeout: int | None = None, retries: int | None = None) -> Response:
         """
         Makes a direct request without a proxy (bare connection).
         """
 
-        if timeout == None:
+        if timeout is None:
             timeout = self.get_timeout()
 
-        if retries == None:
-            if self.get_verbose(): print(f'*{__name__}* Reached maximum number of connections.')
+        if retries is None:
             retries = self.get_retries()
 
-        if self.get_connection_count() >= self.get_max_connections():
+        if (self.get_max_connections() != 0) and (self.get_connection_count() >= self.get_max_connections()):
             self.__set_direct_connection_count(0)
             retries = self.get_retries()
 
         try:
-            if self.get_show_spinner(): self.get_spinner().start()
-            if self.get_session() != None:
+            if self.get_show_spinner():
+                self.get_spinner().start()
+            if self.get_session() is not None:
                 return self.get_session().get(url= url, params= params,
                                             headers= self.get_header(), cookies= cookies,
                                             stream= stream, timeout= timeout)
@@ -256,41 +259,46 @@ class Proxy:
                 return requests.get(url= url, params= params,
                                     headers= self.get_header(refresh=True), cookies= cookies,
                                     stream= stream, timeout= timeout)
-        except:
+        except Exception:
             if retries <= 0:
-                if self.get_verbose(): print(f'*{__name__}* Reached maximum number of retries.')
+                if self.get_verbose():
+                    print(f'*{__name__}* Reached maximum number of retries.')
                 retries = self.get_retries()
-            if self.get_verbose(): print(f'*{__name__}* Retry nº {self.get_retries()+1-retries}.')
+            if self.get_verbose():
+                print(f'*{__name__}* Retry nº {self.get_retries()+1-retries}.')
 
-            return self.get(url= url, params= params, cookies= cookies,
+            return self.get_direct(url= url, params= params, cookies= cookies,
                     stream=stream, timeout= timeout, retries= retries-1)
         finally:
             self.__set_direct_connection_count(self.get_direct_connection_count()+1)
             self.__set_total_connections(self.get_total_connections()+1)
-            if self.get_show_spinner(): self.get_spinner().stop()
+            if self.get_show_spinner():
+                self.get_spinner().stop()
 
-    def get(self, url: str, params: dict = None, cookies: dict = None,
-            stream: dict = False, timeout: int = None, retries: int = None) -> Response:
+    def get(self, url: str, params: dict | None = None, cookies: dict | None = None,
+            stream: bool = False, timeout: int | None = None, retries: int | None = None) -> Response:
         """
         Makes a request through the active proxy.
         """
 
-        if timeout == None:
+        if timeout is None:
             timeout = self.get_timeout()
 
-        if retries == None:
+        if retries is None:
             retries = self.get_retries()
 
         if (self.get_max_connections() != 0) and (self.get_connection_count() >= self.get_max_connections()):
-            if self.get_verbose(): print(f'{__name__}: Reached max connections. Getting new proxy ({len(self.get_proxies())} remaining)')
+            if self.get_verbose():
+                print(f'{__name__}: Reached max connections. Getting new proxy ({len(self.get_proxies())} remaining)')
             self.set_proxy()
             self.__set_connection_count(0)
             retries = self.get_retries()
 
         try:
-            if self.get_show_spinner(): self.get_spinner().start()
+            if self.get_show_spinner():
+                self.get_spinner().start()
 
-            if self.get_session() != None:
+            if self.get_session() is not None:
                 return self.get_session().get(url= url, params= params, proxies= self.__get_proxy(),
                                             headers= self.get_header(), cookies= cookies,
                                             stream= stream, timeout= timeout)
@@ -298,16 +306,19 @@ class Proxy:
                 return requests.get(url= url, params= params, proxies= self.__get_proxy(),
                                         headers= self.get_header(refresh=True), cookies= cookies,
                                         stream= stream, timeout= timeout)
-        except:
+        except Exception:
             if retries <= 0:
-                if self.get_verbose(): print(f'{__name__}: Reached max retries. Getting new proxy ({len(self.get_proxies())} remaining)')
+                if self.get_verbose():
+                    print(f'{__name__}: Reached max retries. Getting new proxy ({len(self.get_proxies())} remaining)')
                 self.set_proxy()
                 retries = self.get_retries()
-            if self.get_verbose(): print(f'{__name__}: Retry nº {self.get_retries()+1-retries}.')
+            if self.get_verbose():
+                print(f'{__name__}: Retry nº {self.get_retries()+1-retries}.')
 
             return self.get(url= url, params= params, cookies= cookies,
                     stream=stream, timeout= timeout, retries= retries-1)
         finally:
-            if self.get_show_spinner(): self.get_spinner().stop()
+            if self.get_show_spinner():
+                self.get_spinner().stop()
 
 # ------------------------------------------------------------------------------

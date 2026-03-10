@@ -1,20 +1,19 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------------------------
-#+ Autor:  	Ran#
-#+ Creado: 	2022/02/12 19:50:16.098183
-#+ Editado:	2026/03/10 20:45:15.798674
+#+ Authors:	Ran#
+#+ Created:	2022/02/12 19:50:16.098183
+#+ Revised:	2026/03/10 21:23:26.298045
 # ------------------------------------------------------------------------------
 import unittest
 import requests
-from typing import List
 
 from conexions.proxy import Proxy
 # ------------------------------------------------------------------------------
 
 class TestProxy(unittest.TestCase):
     proxy_url: str = 'https://sslproxies.org'
-    ip_urls: List[str] = [
+    ip_urls: list[str] = [
             'https://ip.me',
             'https://icanhazip.com'
             ]
