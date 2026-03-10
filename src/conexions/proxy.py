@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 16:43:37.259437
-#+ Editado:	2022/02/27 13:55:15.423649
+#+ Editado:	2026/03/10 20:45:15.798674
 # ------------------------------------------------------------------------------
 import requests
 from requests.sessions import Session
@@ -13,96 +13,94 @@ from typing import List, Union
 #import secrets
 from bs4 import BeautifulSoup as bs
 from fake_useragent import UserAgent
-from halo import Halo
+from yaspin import yaspin
+from yaspin.spinners import Spinners
 
 from .dto_proxy import ProxyDTO
-from .excepcions import CambioNaPaxinaErro
+from .excepcions import PageChangedError
 # ------------------------------------------------------------------------------
 class Proxy:
-    # Atributos da clase -------------------------------------------------------
-    __ligazon: str = 'https://sslproxies.org'
-    __sesion: Session = None
+    # Class attributes ---------------------------------------------------------
+    __url: str = 'https://sslproxies.org'
+    __session: Session = None
     __verbose: bool = False
-    __verbosalo: bool = False
-    __max_cons: int = 0             # ó ser 0 implica que non ten un máximo predefinido
-    # xFCR: xuntar as cant_cons nunha soa variable
-    __cant_cons_totais: int = 0
-    __cant_cons: int = 0
-    __cant_cons_espido: int = 0
-    __reintentos: int = 5
+    __show_spinner: bool = False
+    __max_connections: int = 0      # 0 means no predefined maximum
+    # xFCR: merge connection counts into a single variable
+    __total_connections: int = 0
+    __connection_count: int = 0
+    __direct_connection_count: int = 0
+    __retries: int = 5
     __timeout: int = 30
-    __cabeceira: dict[str, str]
-    __lst_proxys: List[ProxyDTO]    # Ordeados de máis velho[0] a máis novo[len()]
+    __header: dict[str, str]
+    __proxy_list: List[ProxyDTO]    # Ordered oldest[0] to newest[len()]
     __proxy: ProxyDTO
-    __spinner: Halo = Halo(text='Conectando', spinner='dots')
+    __spinner = yaspin(text='Connecting', spinner=Spinners.dots)
 
-    __ligazons_ip: List[str] = [
+    __ip_urls: List[str] = [
             'https://ip.me',
             'https://icanhazip.com'
             ]
     # --------------------------------------------------------------------------
 
-    def __init__(self, max_cons= 0, reintentos= 5, timeout= 30, verbose=False, verbosalo= False) -> None:
+    def __init__(self, max_connections= 0, retries= 5, timeout= 30, verbose=False, show_spinner= False) -> None:
         self.__verbose = verbose
-        self.__verbosalo = verbosalo
-        self.__max_cons = max_cons
-        self.__reintentos = reintentos
+        self.__show_spinner = show_spinner
+        self.__max_connections = max_connections
+        self.__retries = retries
         self.__timeout = timeout
-        self.__lst_proxys  = []
+        self.__proxy_list  = []
 
-        self.set_cabeceira()    # Dalle valor a __cabeceira
-        self.set_proxys()       # Enche a __lst_proxys
-        self.set_proxy()        # Saca un proxy da lista e meteo como atributo
+        self.set_header()       # Sets __header
+        self.set_proxies()      # Fills __proxy_list
+        self.set_proxy()        # Pops a proxy from the list into __proxy
     # --------------------------------------------------------------------------
 
     # Getters
 
-    def get_ligazon(self) -> str:
-        return self.__ligazon
+    def get_url(self) -> str:
+        return self.__url
 
-    def get_sesion(self) -> Session:
-        """
-        """
-
-        return self.__sesion
+    def get_session(self) -> Session:
+        return self.__session
 
     def get_verbose(self) -> bool:
         return self.__verbose
 
-    def get_verbosalo(self) -> bool:
-        return self.__verbosalo
+    def get_show_spinner(self) -> bool:
+        return self.__show_spinner
 
-    def get_max_cons(self) -> int:
-        return self.__max_cons
+    def get_max_connections(self) -> int:
+        return self.__max_connections
 
-    def get_cant_cons_totais(self) -> int:
-        return self.__cant_cons_totais
+    def get_total_connections(self) -> int:
+        return self.__total_connections
 
-    def get_cant_cons(self) -> int:
-        return self.__cant_cons
+    def get_connection_count(self) -> int:
+        return self.__connection_count
 
-    def get_cant_cons_espido(self) -> int:
-        return self.__cant_cons_espido
+    def get_direct_connection_count(self) -> int:
+        return self.__direct_connection_count
 
-    def get_reintentos(self) -> int:
-        return self.__reintentos
+    def get_retries(self) -> int:
+        return self.__retries
 
     def get_timeout(self) -> int:
         return self.__timeout
 
-    def get_cabeceira(self, set_nova: Union[bool, int] = False) -> dict[str, str]:
+    def get_header(self, refresh: Union[bool, int] = False) -> dict[str, str]:
         try:
-            return self.__cabeceira
+            return self.__header
         finally:
-            if set_nova:
-                self.set_cabeceira()
+            if refresh:
+                self.set_header()
 
-    def get_proxys(self) -> List[ProxyDTO]:
-        return self.__lst_proxys
+    def get_proxies(self) -> List[ProxyDTO]:
+        return self.__proxy_list
 
     def get_proxy(self) -> ProxyDTO:
-        # se se alcanzou o máximo sacar novo proxy
-        if (self.get_max_cons() != 0) and (self.get_cant_cons() >= self.get_max_cons()):
+        # if max connections reached, rotate to a new proxy
+        if (self.get_max_connections() != 0) and (self.get_connection_count() >= self.get_max_connections()):
             self.set_proxy()
         return self.__proxy
 
@@ -110,88 +108,78 @@ class Proxy:
         try:
             return self.get_proxy().format()
         finally:
-            self.__set_cant_cons(self.get_cant_cons()+1)
-            self.__set_cant_cons_totais(self.get_cant_cons_totais()+1)
+            self.__set_connection_count(self.get_connection_count()+1)
+            self.__set_total_connections(self.get_total_connections()+1)
 
-    def get_ligazons_ip(self) -> List[str]:
-        return self.__ligazons_ip
+    def get_ip_urls(self) -> List[str]:
+        return self.__ip_urls
 
-    def get_spinner(self) -> Halo:
+    def get_spinner(self):
         return self.__spinner
 
     # Getters #
 
     # Setters
 
-    def __set_ligazon(self, nova_ligazon: str) -> None:
-        self.__ligazon = nova_ligazon
+    def __set_url(self, url: str) -> None:
+        self.__url = url
 
-    def set_sesion(self, reset: Union[bool, int] = False) -> None:
-        """
-        """
-
+    def set_session(self, reset: Union[bool, int] = False) -> None:
         if reset:
-            self.__sesion = None
+            self.__session = None
         else:
-            self.__sesion = requests.Session()
+            self.__session = requests.Session()
 
-    def set_verbose(self, novo_verbose: bool) -> None:
-        self.__verbose = novo_verbose
+    def set_verbose(self, verbose: bool) -> None:
+        self.__verbose = verbose
 
-    def set_verbosalo(self, novo_verbosalo: bool) -> None:
-        self.__verbosalo = novo_verbosalo
+    def set_show_spinner(self, show_spinner: bool) -> None:
+        self.__show_spinner = show_spinner
 
-    def set_reintentos(self, novo_reintentos: int) -> None:
-        self.__reintentos = novo_reintentos
+    def set_retries(self, retries: int) -> None:
+        self.__retries = retries
 
-    def set_max_cons(self, novo_max_cons: int) -> None:
-        self.__max_cons = novo_max_cons
+    def set_max_connections(self, max_connections: int) -> None:
+        self.__max_connections = max_connections
 
-    def __set_cant_cons_totais(self, novo_cant_cons_totais: int) -> None:
-        self.__cant_cons_totais = novo_cant_cons_totais
+    def __set_total_connections(self, total_connections: int) -> None:
+        self.__total_connections = total_connections
 
-    def __set_cant_cons(self, novo_cant_cons: int) -> None:
-        self.__cant_cons = novo_cant_cons
+    def __set_connection_count(self, connection_count: int) -> None:
+        self.__connection_count = connection_count
 
-    def __set_cant_cons_espido(self, novo_cant_cons_espido: int) -> None:
-        self.__cant_cons_espido = novo_cant_cons_espido
+    def __set_direct_connection_count(self, direct_connection_count: int) -> None:
+        self.__direct_connection_count = direct_connection_count
 
-    def set_timeout(self, novo_timeout: int) -> None:
-        self.__timeout = novo_timeout
+    def set_timeout(self, timeout: int) -> None:
+        self.__timeout = timeout
 
-    def set_cabeceira(self) -> None:
-        self.__cabeceira = {'User-Agent': UserAgent().random}
+    def set_header(self) -> None:
+        self.__header = {'User-Agent': UserAgent().random}
 
-    def set_proxys(self) -> None:
+    def set_proxies(self) -> None:
         """
-        Colle a páxina e saca toda a info sobre os proxys que contén.
-
-        @entradas:
-            Ningunha.
-
-        @saidas:
-            Ningunha.
+        Fetches the proxy page and extracts all proxy information from it.
         """
 
         while True:
             try:
-                pax_web = requests.get(url= self.get_ligazon(),
-                                        headers= self.get_cabeceira())
+                page = requests.get(url= self.get_url(),
+                                    headers= self.get_header())
             except ConnectionError:
                 pass
             except Exception:
                 raise
             else:
-                # se saiu todo ben sáese do bucle
-                if pax_web.ok:
-                    pax_web.encoding = 'utf-8'
+                if page.ok:
+                    page.encoding = 'utf-8'
                     break
 
-        if self.get_verbose() and self.get_cant_cons_totais()>0: print(f'{__name__}: Enchendo a lista de proxys.')
+        if self.get_verbose() and self.get_total_connections()>0: print(f'{__name__}: Filling proxy list.')
 
-        taboa_proxys = bs(pax_web.text, 'html.parser').find(class_='table')
+        proxy_table = bs(page.text, 'html.parser').find(class_='table')
 
-        lst_nomes_cols_esperados = [
+        expected_cols = [
                 'IP Address',
                 'Port',
                 'Code',
@@ -201,142 +189,125 @@ class Proxy:
                 'Https',
                 'Last Checked'
         ]
-        lst_nomes_cols_obtidos = taboa_proxys.thead.find_all('th')
+        obtained_cols = proxy_table.thead.find_all('th')
 
-        if len(lst_nomes_cols_esperados) != len(lst_nomes_cols_obtidos):
-            raise CambioNaPaxinaErro('Modificado o número de columnas')
+        if len(expected_cols) != len(obtained_cols):
+            raise PageChangedError('Number of columns changed')
 
-        for esperado, obtido in zip(lst_nomes_cols_esperados, lst_nomes_cols_obtidos):
-            if esperado != obtido.text:
-                raise CambioNaPaxinaErro('Modificado o orde ou nome das columnas')
+        for expected, obtained in zip(expected_cols, obtained_cols):
+            if expected != obtained.text:
+                raise PageChangedError('Column order or name changed')
 
-        for fila in taboa_proxys.tbody:
-            novo_proxy = ProxyDTO([atributo.text for atributo in fila.find_all('td')])
-            if (novo_proxy.tipo == 'elite proxy') and (novo_proxy.google == 'no') and (novo_proxy.https == 'yes'):
-                # métoos desta forma na lista porque así vou sacando e eliminando dende atrás
-                self.__lst_proxys.insert(0, novo_proxy)
+        for row in proxy_table.tbody:
+            new_proxy = ProxyDTO([col.text for col in row.find_all('td')])
+            if (new_proxy.anonymity == 'elite proxy') and (new_proxy.google == 'no') and (new_proxy.https == 'yes'):
+                # insert at front so we pop from the back (newest last)
+                self.__proxy_list.insert(0, new_proxy)
 
     def set_proxy(self) -> None:
         """
-        Devolve un proxy e automáticamente eliminao da lista.
-        De non ter ningún proxy que devolver, escraperá a páxina
-        por máis.
-
-        @entradas:
-            Ningunha.
-
-        @saídas:
-            ProxyDTO    -   Sempre
-            └ O proxy a usar nas conexións.
+        Pops a proxy from the list and sets it as the active proxy.
+        If the list is empty, re-scrapes the page to refill it.
         """
 
         try:
-            self.__proxy = self.get_proxys().pop()
-        # se a lista de proxys está baleira
+            self.__proxy = self.get_proxies().pop()
         except IndexError:
-            self.set_proxys()
+            self.set_proxies()
             self.get_proxy()    # recursion
         finally:
-            self.__set_cant_cons(0)
+            self.__set_connection_count(0)
 
     # Setters #
 
-    def get_ip(self, reintentos: int = None) -> str:
-        """
-        """
-
-        if reintentos == None:
-            reintentos = self.get_reintentos()
+    def get_ip(self, retries: int = None) -> str:
+        if retries == None:
+            retries = self.get_retries()
 
         try:
-            return requests.get(self.get_ligazons_ip()[0]).text.rstrip()
+            return requests.get(self.get_ip_urls()[0]).text.rstrip()
         except ConnectionError:
-            return self.get_ip(reintentos-1)
+            return self.get_ip(retries-1)
 
-    def get_espido (self, ligazon: str, params: dict = None, bolachas: dict = None,
-                stream: dict = False, timeout: int = None, reintentos: int = None) -> Response:
+    def get_direct(self, url: str, params: dict = None, cookies: dict = None,
+                stream: dict = False, timeout: int = None, retries: int = None) -> Response:
         """
+        Makes a direct request without a proxy (bare connection).
         """
-
-        # lazy_check_types
-
-        #self.
 
         if timeout == None:
             timeout = self.get_timeout()
 
-        if reintentos == None:
-            if self.get_verbose(): print(f'*{__name__}* Chegouse á cantidade máxima de conexións.')
-            reintentos = self.get_reintentos()
+        if retries == None:
+            if self.get_verbose(): print(f'*{__name__}* Reached maximum number of connections.')
+            retries = self.get_retries()
 
-        if self.get_cant_cons() >= self.get_max_cons():
-            self.__set_cant_cons_espido(0)
-            reintentos = self.get_reintentos()
+        if self.get_connection_count() >= self.get_max_connections():
+            self.__set_direct_connection_count(0)
+            retries = self.get_retries()
 
         try:
-            if self.get_verbosalo(): self.get_spinner().start()
-            if self.get_sesion() != None:
-                return self.get_sesion().get(url= ligazon, params= params,
-                                            headers= self.get_cabeceira(), cookies= bolachas,
+            if self.get_show_spinner(): self.get_spinner().start()
+            if self.get_session() != None:
+                return self.get_session().get(url= url, params= params,
+                                            headers= self.get_header(), cookies= cookies,
                                             stream= stream, timeout= timeout)
             else:
-                return requests.get(url= ligazon, params= params,
-                                    headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
+                return requests.get(url= url, params= params,
+                                    headers= self.get_header(refresh=True), cookies= cookies,
                                     stream= stream, timeout= timeout)
-        #except ConnectionError:
         except:
-            if reintentos <= 0:
-                if self.get_verbose(): print(f'*{__name__}* Chegouse á cantidade máxima de reintentos.')
-                reintentos = self.get_reintentos()
-            if self.get_verbose(): print(f'*{__name__}* Reintento nº {self.get_reintentos()+1-reintentos}.')
+            if retries <= 0:
+                if self.get_verbose(): print(f'*{__name__}* Reached maximum number of retries.')
+                retries = self.get_retries()
+            if self.get_verbose(): print(f'*{__name__}* Retry nº {self.get_retries()+1-retries}.')
 
-            return self.get(ligazon= ligazon, params= params, bolachas= bolachas,
-                    stream=stream, timeout= timeout, reintentos= reintentos-1)
+            return self.get(url= url, params= params, cookies= cookies,
+                    stream=stream, timeout= timeout, retries= retries-1)
         finally:
-            self.__set_cant_cons_espido(self.get_cant_cons_espido()+1)
-            self.__set_cant_cons_totais(self.get_cant_cons_totais()+1)
-            if self.get_verbosalo(): self.get_spinner().stop()
+            self.__set_direct_connection_count(self.get_direct_connection_count()+1)
+            self.__set_total_connections(self.get_total_connections()+1)
+            if self.get_show_spinner(): self.get_spinner().stop()
 
-    def get(self, ligazon: str, params: dict = None, bolachas: dict = None,
-            stream: dict = False, timeout: int = None, reintentos: int = None) -> Response:
+    def get(self, url: str, params: dict = None, cookies: dict = None,
+            stream: dict = False, timeout: int = None, retries: int = None) -> Response:
         """
+        Makes a request through the active proxy.
         """
-
-        # lazy_check_types
 
         if timeout == None:
             timeout = self.get_timeout()
 
-        if reintentos == None:
-            reintentos = self.get_reintentos()
+        if retries == None:
+            retries = self.get_retries()
 
-        if (self.get_max_cons() != 0) and (self.get_cant_cons() >= self.get_max_cons()):
-            if self.get_verbose(): print(f'{__name__}: Chegouse á cantidade máxima de conexións. Collendo novo proxy ({len(self.get_proxys())} restantes)')
+        if (self.get_max_connections() != 0) and (self.get_connection_count() >= self.get_max_connections()):
+            if self.get_verbose(): print(f'{__name__}: Reached max connections. Getting new proxy ({len(self.get_proxies())} remaining)')
             self.set_proxy()
-            self.__set_cant_cons(0)
-            reintentos = self.get_reintentos()
+            self.__set_connection_count(0)
+            retries = self.get_retries()
 
         try:
-            if self.get_verbosalo(): self.get_spinner().start()
+            if self.get_show_spinner(): self.get_spinner().start()
 
-            if self.get_sesion() != None:
-                return self.get_sesion().get(url= ligazon, params= params, proxies= self.__get_proxy(),
-                                            headers= self.get_cabeceira(), cookies= bolachas,
+            if self.get_session() != None:
+                return self.get_session().get(url= url, params= params, proxies= self.__get_proxy(),
+                                            headers= self.get_header(), cookies= cookies,
                                             stream= stream, timeout= timeout)
             else:
-                return requests.get(url= ligazon, params= params, proxies= self.__get_proxy(),
-                                        headers= self.get_cabeceira(set_nova=True), cookies= bolachas,
+                return requests.get(url= url, params= params, proxies= self.__get_proxy(),
+                                        headers= self.get_header(refresh=True), cookies= cookies,
                                         stream= stream, timeout= timeout)
         except:
-            if reintentos <= 0:
-                if self.get_verbose(): print(f'{__name__}: Chegouse á cantidade máxima de reintentos. Collendo novo proxy ({len(self.get_proxys())} restantes)')
+            if retries <= 0:
+                if self.get_verbose(): print(f'{__name__}: Reached max retries. Getting new proxy ({len(self.get_proxies())} remaining)')
                 self.set_proxy()
-                reintentos = self.get_reintentos()
-            if self.get_verbose(): print(f'{__name__}: Reintento nº {self.get_reintentos()+1-reintentos}.')
+                retries = self.get_retries()
+            if self.get_verbose(): print(f'{__name__}: Retry nº {self.get_retries()+1-retries}.')
 
-            return self.get(ligazon= ligazon, params= params, bolachas= bolachas,
-                    stream=stream, timeout= timeout, reintentos= reintentos-1)
+            return self.get(url= url, params= params, cookies= cookies,
+                    stream=stream, timeout= timeout, retries= retries-1)
         finally:
-            if self.get_verbosalo(): self.get_spinner().stop()
+            if self.get_show_spinner(): self.get_spinner().stop()
 
 # ------------------------------------------------------------------------------

@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 15:30:39.408208
-#+ Editado:	2022/02/15 22:06:52.179490
+#+ Editado:	2026/03/10 20:45:15.798674
 # ------------------------------------------------------------------------------
 from dataclasses import dataclass
 from typing import List
@@ -11,25 +11,25 @@ from typing import List
 @dataclass
 class ProxyDTO:
     ip: str
-    porto: str
-    codigo_estado: str
-    nome_estado: str
-    tipo: str
+    port: str
+    country_code: str
+    country_name: str
+    anonymity: str
     google: str
     https: str
-    dende: str
+    last_checked: str
 
-    def __init__(self, lst_contidos: List) -> None:
-        self.ip = lst_contidos[0]
-        self.porto = lst_contidos[1]
-        self.codigo_estado = lst_contidos[2]
-        self.nome_estado = lst_contidos[3]
-        self.tipo = lst_contidos[4]
-        self.google = lst_contidos[5]
-        self.https = lst_contidos[6]
-        self.dende = lst_contidos[7]
+    def __init__(self, lst_contents: List) -> None:
+        self.ip = lst_contents[0]
+        self.port = lst_contents[1]
+        self.country_code = lst_contents[2]
+        self.country_name = lst_contents[3]
+        self.anonymity = lst_contents[4]
+        self.google = lst_contents[5]
+        self.https = lst_contents[6]
+        self.last_checked = lst_contents[7]
 
     def format(self) -> dict[str, str]:
-        return {'http': 'http://'+self.ip+':'+self.porto,
-                'https': 'http://'+self.ip+':'+self.porto}
+        return {'http': 'http://'+self.ip+':'+self.port,
+                'https': 'http://'+self.ip+':'+self.port}
 # ------------------------------------------------------------------------------

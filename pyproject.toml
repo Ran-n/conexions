@@ -1,6 +1,49 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "conexions"
+version = "1.4"
+description = "Módulo para distintos unificado de conexións web"
+readme = "README.md"
+license = { text = "GPLv3" }
+authors = [{ name = "Ran#", email = "ran-n@tutanota.com" }]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Software Development :: Libraries",
+    "Natural Language :: Galician",
+    "Natural Language :: Portuguese",
+    "Natural Language :: English",
+    "Natural Language :: Spanish",
+]
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "fake-useragent>=2.2.0",
+    "yaspin>=3.0.0",
+    "requests>=2.32.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[project.urls]
+Homepage = "https://www.github.com/Ran-n/conexions"
+"Bug Tracker" = "https://www.github.com/Ran-n/conexions/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.poetry]
+packages = [{include = "conexions", from = "src"}]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

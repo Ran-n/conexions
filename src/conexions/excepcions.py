@@ -3,14 +3,14 @@
 # ------------------------------------------------------------------------------
 #+ Autor:  	Ran#
 #+ Creado: 	2022/02/13 15:34:13.985489
-#+ Editado:	2022/02/15 20:59:34.316049
+#+ Editado:	2026/03/10 20:45:15.798674
 # ------------------------------------------------------------------------------
-class CreacionSesionErro(Exception):
+class SessionCreationError(Exception):
     pass
 
-class CambioNaPaxinaErro(Exception):
+class PageChangedError(Exception):
     pass
 
-class ChaveInvalidaErro(Exception):
+class InvalidKeyError(Exception):
     pass
 # ------------------------------------------------------------------------------

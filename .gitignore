@@ -1,5 +1,32 @@
+# Python
+__pycache__/
 *.pyc
-build/*
-htmlcov/*
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+.eggs/
+
+# Build / dist
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# uv
+.uv/
+uv.lock
+
+# Poetry
+.poetry/
+
+# Testing / coverage
 .coverage
-*.pyc
+htmlcov/
+.pytest_cache/
+
+# Misc
+.DS_Store
