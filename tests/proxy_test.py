@@ -3,12 +3,13 @@
 # ------------------------------------------------------------------------------
 #+ Authors:	Ran#
 #+ Created:	2022/02/12 19:50:16.098183
-#+ Revised:	2026/03/11 07:50:20.231819
+#+ Revised:	2026/03/11 07:55:18.174519
 # ------------------------------------------------------------------------------
 import pytest
 import requests
 
 from conexions.proxy import Proxy
+from conexions.dto_proxy import ProxyDTO
 # ------------------------------------------------------------------------------
 
 PROXY_URL: str = 'https://sslproxies.org'
@@ -86,11 +87,24 @@ def test_get_header(proxy) -> None:
     assert h3 != h4
 
 def test_get_proxies(proxy) -> None:
-    assert proxy.get_proxies() is not None
+    proxies = proxy.get_proxies()
+    assert isinstance(proxies, list)
+    assert len(proxies) > 0
+    assert all(isinstance(p, ProxyDTO) for p in proxies)
 
 def test_get_proxy(proxy) -> None:
     assert proxy.get_connection_count() == 0
-    assert proxy.get_proxy() == proxy.get_proxy()
+    p = proxy.get_proxy()
+    assert isinstance(p, ProxyDTO)
+    assert p == proxy.get_proxy()
+
+def test_get_proxy_auto_rotation(proxy) -> None:
+    proxy.set_max_connections(1)
+    p1 = proxy.get_proxy()
+    proxy._Proxy__set_connection_count(1)
+    p2 = proxy.get_proxy()
+    assert p1 != p2
+    assert proxy.get_connection_count() == 0
 
 def test_priv_get_proxy(proxy) -> None:
     assert proxy.get_connection_count() == 0
@@ -123,6 +137,17 @@ def test_set_session(proxy) -> None:
     assert proxy.get_session() is None
     proxy.set_session()
     assert proxy.get_session() is not None
+
+def test_set_session_reset(proxy) -> None:
+    proxy.set_session()
+    assert proxy.get_session() is not None
+    proxy.set_session(reset=True)
+    assert proxy.get_session() is None
+
+def test_set_session_reset_when_none(proxy) -> None:
+    assert proxy.get_session() is None
+    proxy.set_session(reset=True)
+    assert proxy.get_session() is None
 
 def test_set_verbose(proxy) -> None:
     assert not proxy.get_verbose()
@@ -172,13 +197,16 @@ def test_set_header(proxy) -> None:
 
 def test_set_proxies(proxy) -> None:
     l1 = proxy.get_proxies()
-    assert l1 is not None
+    assert isinstance(l1, list)
+    assert len(l1) > 0
 
     proxy._Proxy__proxy_list = []
     assert proxy.get_proxies() == []
 
     proxy.set_proxies()
-    assert proxy.get_proxies() is not None
+    l2 = proxy.get_proxies()
+    assert isinstance(l2, list)
+    assert len(l2) > 0
 
 def test_set_proxy(proxy) -> None:
     assert proxy.get_proxy() is not None
@@ -195,6 +223,12 @@ def test_set_proxy(proxy) -> None:
     proxy.set_proxy()
     assert len(proxy.get_proxies()) != 0
 
+def test_set_proxy_resets_connection_count(proxy) -> None:
+    proxy._Proxy__set_connection_count(5)
+    assert proxy.get_connection_count() == 5
+    proxy.set_proxy()
+    assert proxy.get_connection_count() == 0
+
 # Setters #
 
 def test_get_ip(proxy, real_ip) -> None:
@@ -202,25 +236,39 @@ def test_get_ip(proxy, real_ip) -> None:
 
 def test_get_direct(proxy, real_ip) -> None:
     ip_used = proxy.get_direct(URL).text.rstrip()
-    assert ip_used is not None
+    assert ip_used == real_ip
+    assert proxy.get_direct_connection_count() == 1
+    assert proxy.get_connection_count() == 0
+    assert proxy.get_total_connections() == 1
+
+    ip_used2 = proxy.get_direct(URL).text.rstrip()
+    assert ip_used2 == real_ip
+    assert proxy.get_direct_connection_count() == 2
+    assert proxy.get_total_connections() == 2
+
+def test_get_direct_with_session(proxy, real_ip) -> None:
+    proxy.set_session()
+    assert proxy.get_session() is not None
+
+    ip_used = proxy.get_direct(URL).text.rstrip()
     assert ip_used == real_ip
     assert proxy.get_direct_connection_count() >= 1
 
+def test_get_direct_max_connections(proxy, real_ip) -> None:
     proxy.set_max_connections(1)
+    ip_used = proxy.get_direct(URL).text.rstrip()
+    assert ip_used == real_ip
     ip_used2 = proxy.get_direct(URL).text.rstrip()
-    assert ip_used == ip_used2
-    assert proxy.get_connection_count() <= 1
+    assert ip_used2 == real_ip
     assert proxy.get_total_connections() == 2
 
 def test_get(proxy, real_ip) -> None:
     ip_used = proxy.get(URL).text.rstrip()
     assert proxy.get_proxy().https == 'yes'
-    assert ip_used is not None
     assert ip_used != real_ip
-
-    len1 = len(proxy.get_proxies())
     assert proxy.get_connection_count() >= 1
 
+    len1 = len(proxy.get_proxies())
     proxy.set_max_connections(1)
     ip_used2 = proxy.get(URL).text.rstrip()
     assert ip_used2 != real_ip
@@ -229,7 +277,7 @@ def test_get(proxy, real_ip) -> None:
     assert proxy.get_connection_count() <= 1
     assert proxy.get_total_connections() >= 2
 
-    proxy.get_direct(URL).text.rstrip()
+    proxy.get_direct(URL)
     assert proxy.get_total_connections() >= 3
 
 def test_session_lifecycle(real_ip) -> None:
