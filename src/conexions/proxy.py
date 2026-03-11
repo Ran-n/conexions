@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # + Authors:	Ran#
 # + Created:	2022/02/13 16:43:37.259437
-# + Revised:	2026/03/11 07:57:13.101630
+# + Revised:	2026/03/11 08:02:35.676827
 # ------------------------------------------------------------------------------
 import requests
 from requests.sessions import Session
@@ -49,6 +49,15 @@ class Proxy:
         verbose: bool = False,
         show_spinner: bool = False,
     ) -> None:
+        """Initializes the Proxy, scrapes the proxy list, and sets the first proxy.
+
+        Args:
+            max_connections: Max uses per proxy before rotating. 0 means unlimited.
+            retries: Number of retry attempts on connection failure.
+            timeout: Request timeout in seconds.
+            verbose: If True, prints status messages to stdout.
+            show_spinner: If True, shows a spinner during requests.
+        """
         self.__verbose = verbose
         self.__show_spinner = show_spinner
         self.__max_connections = max_connections
@@ -99,6 +108,14 @@ class Proxy:
         return self.__timeout
 
     def get_header(self, refresh: bool | int = False) -> dict[str, str]:
+        """Returns the current User-Agent header, optionally refreshing it first.
+
+        Args:
+            refresh: If True, generates a new random User-Agent before returning.
+
+        Returns:
+            A dict with a single 'User-Agent' key.
+        """
         try:
             return self.__header
         finally:
@@ -109,6 +126,11 @@ class Proxy:
         return self.__proxy_list
 
     def get_proxy(self) -> ProxyDTO:
+        """Returns the active proxy, rotating to a new one if max_connections is reached.
+
+        Returns:
+            The currently active ProxyDTO.
+        """
         # if max connections reached, rotate to a new proxy
         if (self.get_max_connections() != 0) and (
             self.get_connection_count() >= self.get_max_connections()
@@ -137,6 +159,11 @@ class Proxy:
         self.__url = url
 
     def set_session(self, reset: bool | int = False) -> None:
+        """Creates or destroys the persistent session.
+
+        Args:
+            reset: If True, destroys the session. If False, creates a new one.
+        """
         if reset:
             self.__session = None
         else:
@@ -167,11 +194,14 @@ class Proxy:
         self.__timeout = timeout
 
     def set_header(self) -> None:
+        """Generates and sets a new random User-Agent header."""
         self.__header = {"User-Agent": UserAgent().random}
 
     def set_proxies(self) -> None:
-        """
-        Fetches the proxy page and extracts all proxy information from it.
+        """Scrapes the proxy source page and fills the proxy list with elite HTTPS proxies.
+
+        Raises:
+            PageChangedError: If the page structure no longer matches the expected format.
         """
 
         while True:
@@ -221,9 +251,10 @@ class Proxy:
                 self.__proxy_list.insert(0, new_proxy)
 
     def set_proxy(self) -> None:
-        """
-        Pops a proxy from the list and sets it as the active proxy.
+        """Pops a proxy from the list and sets it as the active proxy.
+
         If the list is empty, re-scrapes the page to refill it.
+        Always resets the connection count to 0.
         """
 
         try:
@@ -237,6 +268,14 @@ class Proxy:
     # Setters #
 
     def get_ip(self, retries: int | None = None) -> str:
+        """Returns the current public IP address via a direct connection.
+
+        Args:
+            retries: Number of retry attempts. Defaults to get_retries().
+
+        Returns:
+            The public IP address as a string.
+        """
         if retries is None:
             retries = self.get_retries()
 
@@ -254,8 +293,18 @@ class Proxy:
         timeout: int | None = None,
         retries: int | None = None,
     ) -> Response:
-        """
-        Makes a direct request without a proxy (bare connection).
+        """Makes a direct HTTP GET request without routing through a proxy.
+
+        Args:
+            url: Target URL.
+            params: Optional query parameters.
+            cookies: Optional cookies to send.
+            stream: If True, streams the response content.
+            timeout: Request timeout in seconds. Defaults to get_timeout().
+            retries: Retry attempts on failure. Defaults to get_retries().
+
+        Returns:
+            The HTTP response object.
         """
 
         if timeout is None:
@@ -322,8 +371,20 @@ class Proxy:
         timeout: int | None = None,
         retries: int | None = None,
     ) -> Response:
-        """
-        Makes a request through the active proxy.
+        """Makes an HTTP GET request routed through the active proxy.
+
+        Rotates to a new proxy when max_connections is reached or on repeated failure.
+
+        Args:
+            url: Target URL.
+            params: Optional query parameters.
+            cookies: Optional cookies to send.
+            stream: If True, streams the response content.
+            timeout: Request timeout in seconds. Defaults to get_timeout().
+            retries: Retry attempts on failure. Defaults to get_retries().
+
+        Returns:
+            The HTTP response object.
         """
 
         if timeout is None:
