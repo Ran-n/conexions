@@ -8,7 +8,7 @@ version = "1.4"
 description = "Módulo para distintos unificado de conexións web"
 readme = "README.md"
 license = { text = "GPLv3" }
-authors = [{ name = "Ran#", email = "ran-n@tutanota.com" }]
+authors = [{ name = "Ran#", email = "ran.hash@proton.me" }]
 requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 3 - Alpha",
