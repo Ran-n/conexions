@@ -1,28 +1,20 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ------------------------------------------------------------------------------
-# + Autor:  	Ran#
-# + Creado: 	2022/02/12 19:15:21.350520
-# + Editado:	2022/02/26 19:47:40.344750
+# + Authors:	Ran#
+# + Created:	2022/02/12 19:15:21.350520
+# + Revised:	2026/03/11 10:15:00.000000
 # ------------------------------------------------------------------------------
 
-"""
-uteis
-"""
-
-# ------------------------------------------------------------------------------
-
-from .proxy import Proxy as Proxy
+from .proxy_client import ProxyClient as ProxyClient
 
 # ------------------------------------------------------------------------------
 
-__nome__ = "conexions"
 __version__ = "1.4"
-__autor__ = "Ran#"
-__creditos__ = "Ran#"
-__licenza__ = "GPLv3"
-__descricion__ = "Módulo unificado de conexións web"
-__ligazon__ = "https://www.github.com/Ran-n/conexions"
-__problemas__ = "https://www.github.com/Ran-n/conexions/issues"
+__author__ = "Ran#"
+__license__ = "GPLv3"
+__description__ = "Unified web connection module with automatic proxy rotation"
+__url__ = "https://www.github.com/Ran-n/conexions"
+__issues__ = "https://www.github.com/Ran-n/conexions/issues"
 
 # ------------------------------------------------------------------------------
