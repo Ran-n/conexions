@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # + Authors:	Ran#
 # + Created:	2022/02/13 16:43:37.259437
-# + Revised:	2026/03/11 10:45:00.000000
+# + Revised:	2026/03/11 11:12:50.671515
 # ------------------------------------------------------------------------------
 import requests
 from requests.exceptions import ConnectionError
@@ -22,9 +22,9 @@ from .excepcions import PageChangedError
 
 
 class ProxyClient:
-    """HTTP client with automatic proxy rotation sourced from sslproxies.org."""
+    """HTTP client with automatic proxy rotation sourced from free-proxy-list.net."""
 
-    _URL: str = "https://sslproxies.org"
+    _URL: str = "https://free-proxy-list.net/"
     _IP_URLS: list[str] = ["https://ip.me", "https://icanhazip.com"]
 
     def __init__(
