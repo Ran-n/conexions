@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # + Authors:	Ran#
 # + Created:	2022/02/12 19:50:16.098183
-# + Revised:	2026/03/11 10:45:00.000000
+# + Revised:	2026/03/11 11:27:46.318346
 # ------------------------------------------------------------------------------
 import pytest
 import requests
@@ -13,7 +13,7 @@ from conexions.proxy_client import ProxyClient
 
 # ------------------------------------------------------------------------------
 
-PROXY_URL: str = "https://sslproxies.org"
+PROXY_URL: str = "https://free-proxy-list.net/"
 IP_URLS: list[str] = ["https://ip.me", "https://icanhazip.com"]
 URL: str = "https://icanhazip.com"
 
