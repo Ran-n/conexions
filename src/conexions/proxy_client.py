@@ -3,20 +3,22 @@
 # ------------------------------------------------------------------------------
 # + Authors:	Ran#
 # + Created:	2022/02/13 16:43:37.259437
-# + Revised:	2026/03/11 11:12:50.671515
+# + Revised:	2026/03/12 16:43:49.067338
 # ------------------------------------------------------------------------------
+
+import time
+
 import requests
+from bs4 import BeautifulSoup as bs
+from fake_useragent import UserAgent
 from requests.exceptions import ConnectionError
 from requests.models import Response
 from requests.sessions import Session
-
-from bs4 import BeautifulSoup as bs
-from fake_useragent import UserAgent
 from yaspin import yaspin
 from yaspin.spinners import Spinners
 
-from .proxy import Proxy
 from .excepcions import PageChangedError
+from .proxy import Proxy
 
 # ------------------------------------------------------------------------------
 
@@ -33,7 +35,7 @@ class ProxyClient:
         retries: int = 5,
         timeout: int = 30,
         verbose: bool = False,
-        show_spinner: bool = False,
+        show_spinner: bool = True,
     ) -> None:
         """Initializes the ProxyClient, scrapes the proxy list, and sets the first proxy.
 
@@ -45,16 +47,17 @@ class ProxyClient:
             show_spinner: If True, shows a spinner during requests.
         """
         self.max_connections = max_connections
-        self.retries = retries
-        self.timeout = timeout
-        self.verbose = verbose
-        self.show_spinner = show_spinner
+        self.retries: int = retries
+        self.timeout: int = timeout
+        self.verbose: bool = verbose
+        self.show_spinner: bool = show_spinner
 
         self._session: Session | None = None
         self._total_connections: int = 0
         self._connection_count: int = 0
         self._direct_connection_count: int = 0
-        self._spinner = yaspin(text="Connecting", spinner=Spinners.dots)
+        self._last_elapsed: float = 0.0
+        self._spinner = yaspin(text="Connecting", spinner=Spinners.bouncingBall)
 
         self._header: dict[str, str] = self._new_header()
         self._proxy_list: list[Proxy] = []
@@ -74,6 +77,11 @@ class ProxyClient:
     @property
     def direct_connection_count(self) -> int:
         return self._direct_connection_count
+
+    @property
+    def last_elapsed(self) -> float:
+        """Elapsed seconds of the last get / get_direct call (retries included)."""
+        return self._last_elapsed
 
     # ── Active proxy (auto-rotates on access) ─────────────────────────────────
 
@@ -225,6 +233,7 @@ class ProxyClient:
         if retries is None:
             retries = self.retries
 
+        _t0 = time.perf_counter()
         try:
             if self.show_spinner:
                 self._spinner.start()
@@ -264,6 +273,7 @@ class ProxyClient:
         finally:
             self._direct_connection_count += 1
             self._total_connections += 1
+            self._last_elapsed = time.perf_counter() - _t0
             if self.show_spinner:
                 self._spinner.stop()
 
@@ -307,6 +317,7 @@ class ProxyClient:
             self._rotate_proxy()
             retries = self.retries
 
+        _t0 = time.perf_counter()
         try:
             if self.show_spinner:
                 self._spinner.start()
@@ -358,6 +369,7 @@ class ProxyClient:
                 retries=retries - 1,
             )
         finally:
+            self._last_elapsed = time.perf_counter() - _t0
             if self.show_spinner:
                 self._spinner.stop()
 
