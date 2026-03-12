@@ -39,8 +39,17 @@ packages = ["src/conexions"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
+[tool.uv.workspace]
+members = [
+    ".",
+]
+
+[tool.uv.sources]
+conexions = { workspace = true, editable = true }
+
 [dependency-groups]
 dev = [
+    "conexions",
     "pytest>=9.0.2",
     "ruff>=0.15.5",
 ]
