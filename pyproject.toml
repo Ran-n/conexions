@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "conexions"
-version = "1.4"
+version = "1.5"
 description = "Unified web connection module with automatic proxy rotation"
 readme = "README.md"
 license = "GPL-3.0-only"
