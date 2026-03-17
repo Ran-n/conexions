@@ -13,7 +13,7 @@
 [![Issues](https://img.shields.io/github/issues/Ran-n/conexions)](https://github.com/Ran-n/conexions/issues)
 [![Stars](https://img.shields.io/github/stars/Ran-n/conexions)](https://github.com/Ran-n/conexions/stargazers)
 
-Módulo de conexións con rotación automática de proxies. Extrae proxies de elite de [free-proxy-list.net](https://free-proxy-list.net/) e compíteinos en paralelo — gaña o que responda primeiro.
+Módulo de conexións con rotación automática de proxies. Extrae proxies de elite de [free-proxy-list.net](https://free-proxy-list.net/) e rota automaticamente en caso de fallo.
 
 ## Instalación
 
@@ -129,14 +129,14 @@ print(proxy.last_checked)          # "1 minute ago"
 | Parámetro | Por defecto | Descrición |
 |-----------|-------------|------------|
 | `max_connections` | `0` | Peticións por proxy antes de rotar. `0` = sen límite |
-| `retries` | `3` | Intentos en caso de fallo |
-| `timeout` | `10` | Tempo de espera en segundos |
+| `retries` | `2` | Intentos en caso de fallo |
+| `timeout` | `5` | Tempo de espera en segundos |
 | `verbose` | `False` | Mostrar mensaxes de estado |
 | `show_spinner` | `False` | Mostrar spinner durante as peticións |
-| `protocols` | `[Protocol.HTTPS]` | Protocolos a aceptar: `Protocol.HTTP`, `Protocol.HTTPS`, `Protocol.SOCKS4`, `Protocol.SOCKS5` |
+| `protocols` | `None` | Protocolos a aceptar: `Protocol.HTTP`, `Protocol.HTTPS`, `Protocol.SOCKS4`, `Protocol.SOCKS5`. `None` = sen filtro |
 | `countries` | `None` | Lista de valores `Country`. `None` = sen filtro |
 | `anonymities` | `[Anonymity.ELITE]` | Lista de valores `Anonymity`: `Anonymity.ELITE`, `Anonymity.ANONYMOUS`, `Anonymity.TRANSPARENT`. `None` = sen filtro |
-| `google` | `True` | `True` = só proxies compatibles con Google. `False` = só non compatibles. `None` = sen filtro |
+| `google` | `None` | `True` = só proxies compatibles con Google. `False` = só non compatibles. `None` = sen filtro |
 
 ---
 

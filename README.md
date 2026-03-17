@@ -13,7 +13,7 @@
 [![Issues](https://img.shields.io/github/issues/Ran-n/conexions)](https://github.com/Ran-n/conexions/issues)
 [![Stars](https://img.shields.io/github/stars/Ran-n/conexions)](https://github.com/Ran-n/conexions/stargazers)
 
-Unified web connection module with automatic proxy rotation. Scrapes elite proxies from [free-proxy-list.net](https://free-proxy-list.net/) and races them in parallel — the fastest responding proxy wins.
+Unified web connection module with automatic proxy rotation. Scrapes elite proxies from [free-proxy-list.net](https://free-proxy-list.net/) and rotates through them automatically on failure.
 
 ## Installation
 
@@ -129,14 +129,14 @@ print(proxy.last_checked)          # "1 minute ago"
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `max_connections` | `0` | Requests per proxy before rotating. `0` = unlimited |
-| `retries` | `3` | Retry attempts on connection failure |
-| `timeout` | `10` | Request timeout in seconds |
+| `retries` | `2` | Retry attempts on connection failure |
+| `timeout` | `5` | Request timeout in seconds |
 | `verbose` | `False` | Print status messages to stdout |
 | `show_spinner` | `False` | Show a spinner during requests |
-| `protocols` | `[Protocol.HTTPS]` | Proxy protocols to accept: `Protocol.HTTP`, `Protocol.HTTPS`, `Protocol.SOCKS4`, `Protocol.SOCKS5` |
+| `protocols` | `None` | Proxy protocols to accept: `Protocol.HTTP`, `Protocol.HTTPS`, `Protocol.SOCKS4`, `Protocol.SOCKS5`. `None` = no filter |
 | `countries` | `None` | List of `Country` values to filter by. `None` = no filter |
 | `anonymities` | `[Anonymity.ELITE]` | List of `Anonymity` values to filter by: `Anonymity.ELITE`, `Anonymity.ANONYMOUS`, `Anonymity.TRANSPARENT`. `None` = no filter |
-| `google` | `True` | `True` = only Google-compatible proxies. `False` = only non-Google. `None` = no filter |
+| `google` | `None` | `True` = only Google-compatible proxies. `False` = only non-Google. `None` = no filter |
 
 ---
 
