@@ -1,9 +1,8 @@
 #! /usr/bin/env python3
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------------------
 # + Authors:	Ran#
 # + Created:	2022/02/13 15:30:39.408208
-# + Revised:	2026/03/16 14:44:25.473842
+# + Revised:	2026/03/16 18:57:44.102938
 # ------------------------------------------------------------------------------
 
 from dataclasses import dataclass
@@ -41,7 +40,16 @@ class Proxy:
         Returns:
             A new Proxy instance.
         """
-        ip, port, country_code, _country_name, anonymity, google, https, last_checked = values
+        (
+            ip,
+            port,
+            country_code,
+            _country_name,
+            anonymity,
+            google,
+            https,
+            last_checked,
+        ) = values
         try:
             country = Country(country_code)
         except ValueError:
@@ -56,18 +64,33 @@ class Proxy:
             last_checked=last_checked,
         )
 
+    def __str__(self) -> str:
+        country = self.country.value if self.country else "??"
+        google = "google ✓" if self.google else "google ✗"
+        return (
+            f"{self.ip}:{self.port}"
+            f"  {self.protocol.upper()}"
+            f"  {country}"
+            f"  {self.anonymity}"
+            f"  {google}"
+            f"  checked {self.last_checked}"
+        )
+
     def as_proxies(self) -> dict[str, str]:
         """Returns a requests-compatible proxies dict.
 
+        HTTP/HTTPS proxies from free-proxy-list speak plain HTTP for the proxy
+        connection itself — "Https: yes" only means they support CONNECT
+        tunneling for HTTPS targets. SOCKS proxies use their own scheme.
+
         HTTP-only proxies expose only the ``http`` key.
-        HTTPS-capable proxies expose both ``http`` and ``https``.
+        HTTPS-capable and SOCKS proxies expose both ``http`` and ``https``.
 
         Returns:
             A dict mapping URL schemes to proxy URLs.
         """
-        scheme = self.protocol.value  # "http", "https", "socks4", "socks5"
+        scheme = self.protocol.value if self.protocol in (Protocol.SOCKS4, Protocol.SOCKS5) else "http"
         proxy_url = f"{scheme}://{self.ip}:{self.port}"
-        # HTTPS proxies also support HTTP; SOCKS proxies cover both schemes
         proxies = {"http": proxy_url}
         if self.protocol != Protocol.HTTP:
             proxies["https"] = proxy_url

@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------------------
 # + Authors:	Ran#
 # + Created:	2026/03/16 14:21:33.482719
@@ -19,8 +18,8 @@ class Country(str, Enum):
 
     Example::
 
-        Country.US          # <Country.US: 'US'>
-        Country.US.value    # 'US'
+        Country.US  # <Country.US: 'US'>
+        Country.US.value  # 'US'
         Country.US.country_name  # 'United States of America'
         Country.US == "US"  # True
     """

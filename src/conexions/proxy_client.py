@@ -1,13 +1,11 @@
 #! /usr/bin/env python3
-# -*- coding: utf-8 -*-
 # ------------------------------------------------------------------------------
 # + Authors:	Ran#
 # + Created:	2022/02/13 16:43:37.259437
-# + Revised:	2026/03/16 15:38:39.227083
+# + Revised:	2026/03/16 18:53:22.471083
 # ------------------------------------------------------------------------------
 
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 from bs4 import BeautifulSoup as bs
@@ -30,51 +28,48 @@ from .proxy import Proxy
 class ProxyClient:
     """Web client with automatic proxy rotation sourced from free-proxy-list.net.
 
-    Scrapes all proxies on initialisation. Each ``get()`` call races up to
-    ``_REQUEST_BATCH`` filter-matching proxies in parallel and returns the first
-    successful response. Failed proxies are discarded; surviving non-winners go
-    back into the pool. Proxies are filtered by protocol, country, and
-    google-compatibility at selection time.
+    Scrapes all proxies on initialisation. Each ``get()`` call uses the active
+    proxy and rotates to the next filter-matching one on failure. Proxies are
+    filtered by protocol, country, anonymity, and google-compatibility.
     """
 
     _URL: str = "https://free-proxy-list.net/"
     _IP_URLS: list[str] = ["https://ip.me", "https://icanhazip.com"]
-    _REQUEST_BATCH: int = 5
 
     def __init__(
         self,
         max_connections: int = 0,
-        retries: int = 3,
-        timeout: int = 10,
+        retries: int = 2,
+        timeout: int = 5,
         verbose: bool = False,
         show_spinner: bool = False,
         protocols: list[Protocol] | None = None,
         countries: list[Country] | None = None,
         anonymities: list[Anonymity] | None = None,
-        google: bool | None = True,
+        google: bool | None = None,
     ) -> None:
         """Initializes the ProxyClient, scrapes the proxy list, and sets the first proxy.
 
         Args:
             max_connections: Max uses per proxy before rotating. 0 means unlimited.
-            retries: Number of retry attempts on connection failure. Defaults to 3.
-            timeout: Request timeout in seconds. Defaults to 10.
+            retries: Number of retry attempts on connection failure. Defaults to 2.
+            timeout: Request timeout in seconds. Defaults to 5.
             verbose: If True, prints status messages to stdout.
             show_spinner: If True, shows a spinner during requests. Defaults to False.
-            protocols: Protocols to accept. Defaults to ``[Protocol.HTTPS]``.
+            protocols: Protocols to accept. ``None`` means no filter (default).
             countries: Countries to filter by (e.g. ``[Country.US, Country.DE]``).
                 ``None`` means no country filter.
             anonymities: Anonymity levels to accept (e.g. ``[Anonymity.ELITE]``).
                 Defaults to ``[Anonymity.ELITE]``. ``None`` means no anonymity filter.
-            google: If ``True``, only accept Google-compatible proxies (default). If
-                ``False``, only accept non-Google-compatible proxies. ``None`` means no filter.
+            google: If ``True``, only accept Google-compatible proxies. If ``False``,
+                only accept non-Google-compatible proxies. ``None`` means no filter (default).
         """
         self.max_connections = max_connections
         self.retries: int = retries
         self.timeout: int = timeout
         self.verbose: bool = verbose
         self.show_spinner: bool = show_spinner
-        self.protocols: list[Protocol] = protocols if protocols is not None else [Protocol.HTTPS]
+        self.protocols: list[Protocol] | None = protocols
         self.countries: list[Country] | None = countries
         self.anonymities: list[Anonymity] | None = anonymities if anonymities is not None else [Anonymity.ELITE]
         self.google: bool | None = google
@@ -176,12 +171,12 @@ class ProxyClient:
         Protocol matching: an HTTPS proxy satisfies a ``Protocol.HTTP`` filter
         because HTTPS proxies also speak HTTP. The reverse is not true.
         """
-        protocol_match = proxy.protocol in self.protocols or (
-            Protocol.HTTP in self.protocols and proxy.protocol == Protocol.HTTPS
+        protocol_match = (
+            self.protocols is None
+            or proxy.protocol in self.protocols
+            or (Protocol.HTTP in self.protocols and proxy.protocol == Protocol.HTTPS)
         )
-        country_match = self.countries is None or (
-            proxy.country is not None and proxy.country in self.countries
-        )
+        country_match = self.countries is None or (proxy.country is not None and proxy.country in self.countries)
         anonymity_match = self.anonymities is None or proxy.anonymity in self.anonymities
         google_match = self.google is None or proxy.google == self.google
         return protocol_match and country_match and anonymity_match and google_match
@@ -192,6 +187,9 @@ class ProxyClient:
         Raises:
             PageChangedError: If the page structure no longer matches the expected format.
         """
+        if self.verbose and self._total_connections > 0:
+            print(f"[conexions] scraping {self._URL} ...")
+
         while True:
             try:
                 page = requests.get(url=self._URL, headers=self._header)
@@ -203,9 +201,6 @@ class ProxyClient:
                 if page.ok:
                     page.encoding = "utf-8"
                     break
-
-        if self.verbose and self._total_connections > 0:
-            print(f"{__name__}: Filling proxy list.")
 
         proxy_table = bs(page.text, "html.parser").find(class_="table")
 
@@ -224,7 +219,7 @@ class ProxyClient:
         if len(expected_cols) != len(obtained_cols):
             raise PageChangedError("Number of columns changed")
 
-        for expected, obtained in zip(expected_cols, obtained_cols):
+        for expected, obtained in zip(expected_cols, obtained_cols, strict=True):
             if expected != obtained.text:
                 raise PageChangedError("Column order or name changed")
 
@@ -232,43 +227,32 @@ class ProxyClient:
             proxy = Proxy.from_list([col.text for col in row.find_all("td")])
             self._proxy_list.insert(0, proxy)
 
-    def _rotate_proxy(self) -> None:
-        """Pops the next filter-matching proxy from the pool and sets it as active.
+        if self.verbose:
+            matched = sum(1 for p in self._proxy_list if self._matches_filter(p))
+            print(f"[conexions] {len(self._proxy_list)} scraped  ·  {matched} match filter")
 
-        Refills the pool automatically if it runs dry. Always resets the
+    def _rotate_proxy(self) -> None:
+        """Sets the next filter-matching proxy as active.
+
+        Scans the pool without discarding non-matching proxies. Refills
+        automatically if no matching proxy is found. Always resets the
         connection count to 0.
         """
         while True:
             if not self._proxy_list:
                 self._refill_proxies()
-            candidate = self._proxy_list.pop()
-            if self._matches_filter(candidate):
-                self._active_proxy = candidate
-                break
-        self._connection_count = 0
-
-    def _get_via(
-        self,
-        proxy: Proxy,
-        url: str,
-        params: dict | None,
-        cookies: dict | None,
-        stream: bool,
-        timeout: int,
-    ) -> Response:
-        """Performs a single GET request through the given proxy.
-
-        Raises on any network error so the caller can treat it as a failure.
-        """
-        return requests.get(
-            url=url,
-            params=params,
-            proxies=proxy.as_proxies(),
-            headers=self._new_header(),
-            cookies=cookies,
-            stream=stream,
-            timeout=timeout,
-        )
+            for i in range(len(self._proxy_list) - 1, -1, -1):
+                if self._matches_filter(self._proxy_list[i]):
+                    self._active_proxy = self._proxy_list.pop(i)
+                    self._connection_count = 0
+                    if self.verbose:
+                        p = self._active_proxy
+                        country = p.country.value if p.country else "??"
+                        google = "✓" if p.google else "✗"
+                        print(f"[conexions] proxy  {p.ip}:{p.port}  {country}  {p.anonymity}  google {google}")
+                    return
+            # no match in full list — refill and retry
+            self._refill_proxies()
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -315,13 +299,16 @@ class ProxyClient:
         if retries is None:
             retries = self.retries
 
+        if self.verbose:
+            print(f"[conexions] GET {url}  (direct)")
+
         _start_time = time.perf_counter()
         try:
             if self.show_spinner:
                 self._spinner.start()
 
             if self._session is not None:
-                return self._session.get(
+                response = self._session.get(
                     url=url,
                     params=params,
                     headers=self._header,
@@ -329,21 +316,31 @@ class ProxyClient:
                     stream=stream,
                     timeout=timeout,
                 )
-            return requests.get(
-                url=url,
-                params=params,
-                headers=self._new_header(),
-                cookies=cookies,
-                stream=stream,
-                timeout=timeout,
-            )
-        except Exception:
+            else:
+                response = requests.get(
+                    url=url,
+                    params=params,
+                    headers=self._header,
+                    cookies=cookies,
+                    stream=stream,
+                    timeout=timeout,
+                )
+            if self.verbose:
+                elapsed = time.perf_counter() - _start_time
+                print(f"[conexions] {response.status_code} {response.reason}  (direct)  {elapsed:.2f}s")
+            return response
+        except Exception as e:
             if retries <= 0:
                 if self.verbose:
-                    print(f"*{__name__}* Reached maximum number of retries.")
+                    print("[conexions] max retries reached  (direct)")
                 retries = self.retries
             if self.verbose:
-                print(f"*{__name__}* Retry nº {self.retries + 1 - retries}.")
+                elapsed = time.perf_counter() - _start_time
+                attempt = self.retries - retries + 1
+                print(
+                    f"[conexions] failed  direct  {e.__class__.__name__}"
+                    f"  ·  retry {attempt}/{self.retries}  ·  {elapsed:.2f}s"
+                )
             return self.get_direct(
                 url=url,
                 params=params,
@@ -366,15 +363,9 @@ class ProxyClient:
         cookies: dict | None = None,
         stream: bool = False,
         timeout: int | None = None,
+        retries: int | None = None,
     ) -> Response:
-        """Makes an HTTP GET request by racing up to ``_REQUEST_BATCH`` proxies in parallel.
-
-        Collects up to ``_REQUEST_BATCH`` filter-matching proxies from the pool
-        and fires them all concurrently. The first successful response wins:
-        that proxy becomes the active proxy and the response is returned.
-        Proxies that fail are discarded; proxies that also succeed (but arrived
-        later) go back into the pool. If every proxy in the batch fails, a new
-        batch is tried immediately.
+        """Makes an HTTP GET request through the active proxy, rotating on failure.
 
         Args:
             url: Target URL.
@@ -382,64 +373,63 @@ class ProxyClient:
             cookies: Optional cookies to send.
             stream: If True, streams the response content.
             timeout: Request timeout in seconds. Defaults to self.timeout.
+            retries: Retry attempts on failure. Defaults to self.retries.
 
         Returns:
-            The HTTP response object from the first proxy to succeed.
+            The HTTP response object.
         """
         if timeout is None:
             timeout = self.timeout
+        if retries is None:
+            retries = self.retries
 
         _start_time = time.perf_counter()
         try:
             if self.show_spinner:
                 self._spinner.start()
 
-            while True:
-                # collect up to _REQUEST_BATCH filter-matching candidates
-                candidates: list[Proxy] = []
-                while len(candidates) < self._REQUEST_BATCH:
-                    if not self._proxy_list:
-                        self._refill_proxies()
-                    candidate = self._proxy_list.pop()
-                    if self._matches_filter(candidate):
-                        candidates.append(candidate)
-
+            try:
+                p = self.proxy
                 if self.verbose:
-                    print(f"{__name__}: Racing {len(candidates)} proxies.")
-
-                winner: Proxy | None = None
-                response: Response | None = None
-                survivors: list[Proxy] = []
-
-                with ThreadPoolExecutor(max_workers=len(candidates)) as executor:
-                    future_to_proxy = {
-                        executor.submit(
-                            self._get_via, p, url, params, cookies, stream, timeout
-                        ): p
-                        for p in candidates
-                    }
-                    for future in as_completed(future_to_proxy):
-                        proxy = future_to_proxy[future]
-                        try:
-                            result = future.result()
-                            if winner is None:
-                                winner = proxy
-                                response = result
-                            else:
-                                survivors.append(proxy)
-                        except Exception:
-                            pass  # failed proxy — discard
-
-                if winner is not None:
-                    self._active_proxy = winner
-                    self._proxy_list.extend(survivors)
-                    self._connection_count += 1
-                    self._total_connections += 1
-                    return response  # type: ignore[return-value]
-
+                    print(f"[conexions] GET {url}  ·  via {p.ip}:{p.port}  ·  {self.proxy_count} in pool")
+                response = requests.get(
+                    url=url,
+                    params=params,
+                    proxies=p.as_proxies(),
+                    headers=self._header,
+                    cookies=cookies,
+                    stream=stream,
+                    timeout=timeout,
+                )
                 if self.verbose:
-                    print(f"{__name__}: All proxies in batch failed, retrying.")
-
+                    elapsed = time.perf_counter() - _start_time
+                    print(
+                        f"[conexions] {response.status_code} {response.reason}  via {p.ip}:{p.port}  ·  {elapsed:.2f}s"
+                    )
+                self._connection_count += 1
+                self._total_connections += 1
+                return response
+            except Exception as e:
+                if retries <= 0:
+                    if self.verbose:
+                        print("[conexions] max retries reached")
+                    retries = self.retries
+                if self.verbose:
+                    elapsed = time.perf_counter() - _start_time
+                    attempt = self.retries - retries + 1
+                    print(
+                        f"[conexions] failed  {self._active_proxy.ip}:{self._active_proxy.port}"
+                        f"  {e.__class__.__name__}  ·  retry {attempt}/{self.retries}  ·  {elapsed:.2f}s"
+                    )
+                self._rotate_proxy()
+                return self.get(
+                    url=url,
+                    params=params,
+                    cookies=cookies,
+                    stream=stream,
+                    timeout=timeout,
+                    retries=retries - 1,
+                )
         finally:
             self._last_elapsed = time.perf_counter() - _start_time
             if self.show_spinner:
